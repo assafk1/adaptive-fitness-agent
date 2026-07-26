@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Adaptive AI Home Fitness & Recovery Agent</title>
+  
+  <!-- iOS & PWA Native Meta Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Adaptive Coach">
+  <meta name="theme-color" content="#10b981">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="manifest" href="manifest.json">
+
+  <!-- CSS Styles -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- App Header -->
+  <header class="app-header glassmorphism">
+    <div class="brand-group">
+      <div class="brand-logo">🏃‍♂️</div>
+      <div>
+        <h1 class="brand-title">Adaptive Coach</h1>
+        <p class="brand-tagline">AI Daily Fitness & Recovery Agent</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button class="btn btn-primary btn-sm" id="hdr-checkin-btn">⚡ Daily Check-in</button>
+      <button class="btn btn-outline btn-sm" id="hdr-ping-btn" title="Simulate Morning Push Notification">🔔 Push Ping</button>
+      <button class="btn btn-outline btn-sm" id="hdr-profile-btn" title="Profile & Equipment Settings">⚙️ Profile</button>
+    </div>
+  </header>
+
+  <!-- Main View Container -->
+  <main class="app-container">
+    <!-- Navigation Tabs -->
+    <nav class="tab-nav glassmorphism">
+      <button class="tab-btn active" data-tab="chat">💬 Coach Chat</button>
+      <button class="tab-btn" data-tab="plan">🏋️ Today's Plan</button>
+      <button class="tab-btn" data-tab="dashboard">📊 Progress & Stats</button>
+    </nav>
+
+    <!-- Dynamic View Content -->
+    <div id="main-view"></div>
+  </main>
+
+  <!-- Modal Container -->
+  <div id="modal-container"></div>
+
+  <!-- JavaScript Entry Point -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
