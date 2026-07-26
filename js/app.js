@@ -29,11 +29,6 @@ class AdaptiveCoachApp {
     this.initHeaderButtons();
     this.initTabNavigation();
     this.renderActiveTab();
-
-    // Check if onboarding is needed
-    if (!this.profile.onboarded) {
-      setTimeout(() => this.openProfileModal(), 500);
-    }
   }
 
   registerServiceWorker() {
@@ -71,18 +66,20 @@ class AdaptiveCoachApp {
     const pingBtn = document.getElementById('hdr-ping-btn');
     const profileBtn = document.getElementById('hdr-profile-btn');
 
-    checkinBtn.addEventListener('click', () => this.openCheckinModal());
+    if (checkinBtn) checkinBtn.addEventListener('click', () => this.openCheckinModal());
 
-    pingBtn.addEventListener('click', async () => {
-      const granted = await NotificationManager.requestPermission();
-      if (granted) {
-        NotificationManager.sendTestNotification();
-      } else {
-        alert('Notifications requested! Check your device settings.');
-      }
-    });
+    if (pingBtn) {
+      pingBtn.addEventListener('click', async () => {
+        const granted = await NotificationManager.requestPermission();
+        if (granted) {
+          NotificationManager.sendTestNotification();
+        } else {
+          alert('Notifications requested! Check your device settings.');
+        }
+      });
+    }
 
-    profileBtn.addEventListener('click', () => this.openProfileModal());
+    if (profileBtn) profileBtn.addEventListener('click', () => this.openProfileModal());
   }
 
   initTabNavigation() {

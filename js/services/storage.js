@@ -1,4 +1,4 @@
-// Local Storage Persistence Manager
+// Local Storage Persistence Manager with Fallback & iOS PWA Protection
 
 const KEYS = {
   PROFILE: 'afa_user_profile',
@@ -7,37 +7,67 @@ const KEYS = {
   SETTINGS: 'afa_app_settings'
 };
 
+// In-memory fallback in case localStorage is restricted
+const memoryFallback = {};
+
+const safeGetItem = (key) => {
+  try {
+    return localStorage.getItem(key) || memoryFallback[key] || null;
+  } catch (e) {
+    return memoryFallback[key] || null;
+  }
+};
+
+const safeSetItem = (key, value) => {
+  try {
+    localStorage.setItem(key, value);
+    memoryFallback[key] = value;
+  } catch (e) {
+    console.warn('localStorage write failed, using memory fallback:', e);
+    memoryFallback[key] = value;
+  }
+};
+
 export const Storage = {
   // USER PROFILE
   getProfile() {
-    const data = localStorage.getItem(KEYS.PROFILE);
+    const data = safeGetItem(KEYS.PROFILE);
     if (!data) {
-      return {
-        onboarded: false,
+      const defaultProfile = {
+        onboarded: true, // Set to true by default to avoid annoying pop-up prompts
         name: 'Assaf',
         age: 30,
         heightCm: 178,
         weightKg: 75,
-        fitnessLevel: 'Intermediate', // Beginner, Intermediate, Advanced
-        equipment: ['Bodyweight', 'Jump Rope', 'Pull-up Bar'], // Available equipment
+        fitnessLevel: 'Intermediate',
+        equipment: ['Bodyweight', 'Jump Rope', 'Pull-up Bar', 'Chair / Bench', 'Running Shoes'],
         preferredTimeOfDay: 'Morning',
-        sports: ['Tennis', 'Soccer'], // Favorite external activities
+        sports: ['Tennis', 'Soccer'],
         goals: ['Maintain fitness', 'Injury prevention', 'Calisthenics strength', 'Cardio endurance']
       };
+      this.saveProfile(defaultProfile);
+      return defaultProfile;
     }
-    return JSON.parse(data);
+    try {
+      const parsed = JSON.parse(data);
+      parsed.onboarded = true; // Ensure onboarded is set
+      return parsed;
+    } catch (e) {
+      return { onboarded: true, name: 'Assaf', age: 30, heightCm: 178, weightKg: 75, fitnessLevel: 'Intermediate', equipment: ['Bodyweight', 'Jump Rope', 'Pull-up Bar'], sports: ['Tennis', 'Soccer'] };
+    }
   },
 
   saveProfile(profile) {
     const updated = { ...profile, onboarded: true };
-    localStorage.setItem(KEYS.PROFILE, JSON.stringify(updated));
+    safeSetItem(KEYS.PROFILE, JSON.stringify(updated));
     return updated;
   },
 
   // DAILY CHECK-INS & READINESS
   getCheckIns() {
-    const data = localStorage.getItem(KEYS.CHECKINS);
-    return data ? JSON.parse(data) : {};
+    const data = safeGetItem(KEYS.CHECKINS);
+    if (!data) return {};
+    try { return JSON.parse(data); } catch (e) { return {}; }
   },
 
   getTodayCheckIn() {
@@ -53,25 +83,26 @@ export const Storage = {
     const entry = {
       date: todayKey,
       timestamp: new Date().toISOString(),
-      energyLevel: checkInData.energyLevel || 7, // 1 - 10
-      sorenessLevel: checkInData.sorenessLevel || 2, // 1 - 10
-      sorenessAreas: checkInData.sorenessAreas || [], // e.g. ['Legs', 'Shoulders']
-      availableMinutes: checkInData.availableMinutes || 30, // 15, 30, 45, 60, 0
-      sportsToday: checkInData.sportsToday || [], // e.g. ['Tennis']
-      sportsPlannedTime: checkInData.sportsPlannedTime || '', // e.g. '5:00 PM'
+      energyLevel: checkInData.energyLevel || 7,
+      sorenessLevel: checkInData.sorenessLevel || 2,
+      sorenessAreas: checkInData.sorenessAreas || [],
+      availableMinutes: checkInData.availableMinutes || 30,
+      sportsToday: checkInData.sportsToday || [],
+      sportsPlannedTime: checkInData.sportsPlannedTime || '',
       notes: checkInData.notes || '',
-      readinessScore: checkInData.readinessScore || 75 // 0 - 100
+      readinessScore: checkInData.readinessScore || 75
     };
 
     checkIns[todayKey] = entry;
-    localStorage.setItem(KEYS.CHECKINS, JSON.stringify(checkIns));
+    safeSetItem(KEYS.CHECKINS, JSON.stringify(checkIns));
     return entry;
   },
 
   // LOG COMPLETED WORKOUTS
   getWorkoutLogs() {
-    const data = localStorage.getItem(KEYS.WORKOUT_LOGS);
-    return data ? JSON.parse(data) : [];
+    const data = safeGetItem(KEYS.WORKOUT_LOGS);
+    if (!data) return [];
+    try { return JSON.parse(data); } catch (e) { return []; }
   },
 
   logCompletedWorkout(log) {
@@ -83,25 +114,21 @@ export const Storage = {
       ...log
     };
     logs.unshift(entry);
-    localStorage.setItem(KEYS.WORKOUT_LOGS, JSON.stringify(logs));
+    safeSetItem(KEYS.WORKOUT_LOGS, JSON.stringify(logs));
     return entry;
   },
 
   // SETTINGS & PWA PING
   getSettings() {
-    const data = localStorage.getItem(KEYS.SETTINGS);
-    return data ? JSON.parse(data) : {
-      notificationsEnabled: false,
-      morningPingTime: '08:00',
-      apiKey: '',
-      soundEnabled: true
-    };
+    const data = safeGetItem(KEYS.SETTINGS);
+    if (!data) return { notificationsEnabled: false, morningPingTime: '08:00', apiKey: '', soundEnabled: true };
+    try { return JSON.parse(data); } catch (e) { return { notificationsEnabled: false }; }
   },
 
   saveSettings(settings) {
     const current = this.getSettings();
     const updated = { ...current, ...settings };
-    localStorage.setItem(KEYS.SETTINGS, JSON.stringify(updated));
+    safeSetItem(KEYS.SETTINGS, JSON.stringify(updated));
     return updated;
   }
 };
