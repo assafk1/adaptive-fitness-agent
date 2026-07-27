@@ -1,0 +1,11 @@
+{
+  "name": "adaptive-fitness-agent",
+  "version": "1.0.0",
+  "description": "Adaptive AI Home Fitness & Recovery Agent with Netlify Scheduled WebPush",
+  "scripts": {
+    "build": "echo 'No build step required for ES modules PWA'"
+  },
+  "dependencies": {
+    "web-push": "^3.6.7"
+  }
+}

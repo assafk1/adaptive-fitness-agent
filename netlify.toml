@@ -1,0 +1,9 @@
+[build]
+  publish = "."
+
+[functions]
+  directory = "netlify/functions"
+
+# Scheduled Function to trigger daily morning push alert at 08:00 AM UTC (11:00 AM Local)
+[functions."daily-ping"]
+  schedule = "0 8 * * *"
