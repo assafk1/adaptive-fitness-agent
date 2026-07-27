@@ -14,7 +14,7 @@
   <link rel="manifest" href="manifest.json">
 
   <!-- CSS Styles -->
-  <link rel="stylesheet" href="css/styles.css?v=2">
+  <link rel="stylesheet" href="css/styles.css?v=3">
 </head>
 <body>
 
@@ -30,7 +30,7 @@
 
     <div class="header-actions">
       <button class="btn btn-primary btn-sm" id="hdr-checkin-btn">⚡ Daily Check-in</button>
-      <button class="btn btn-outline btn-sm" id="hdr-key-btn" title="Setup Gemini AI API Key">🔑 Gemini Key</button>
+      <button class="btn btn-outline btn-sm" id="hdr-key-btn" onclick="window.openGeminiKeyModal()" title="Setup Gemini AI API Key">🔑 Gemini Key</button>
       <button class="btn btn-outline btn-sm" id="hdr-ping-btn" title="Simulate Morning Push Notification">🔔 Push Ping</button>
       <button class="btn btn-outline btn-sm" id="hdr-profile-btn" title="Profile & Equipment Settings">⚙️ Profile</button>
     </div>
@@ -53,6 +53,6 @@
   <div id="modal-container"></div>
 
   <!-- JavaScript Entry Point -->
-  <script type="module" src="js/app.js?v=2"></script>
+  <script type="module" src="js/app.js?v=3"></script>
 </body>
 </html>

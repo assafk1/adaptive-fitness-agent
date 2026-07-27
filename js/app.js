@@ -30,6 +30,24 @@ class AdaptiveCoachApp {
     this.initHeaderButtons();
     this.initTabNavigation();
     this.renderActiveTab();
+    this.setupGlobalHandlers();
+  }
+
+  setupGlobalHandlers() {
+    window.openGeminiKeyModal = () => {
+      const currentKey = Storage.getSettings().apiKey || '';
+      const keyVal = prompt('🔑 Enter your free Google Gemini API Key (from aistudio.google.com):', currentKey);
+      if (keyVal !== null) {
+        Storage.saveSettings({ apiKey: keyVal.trim() });
+        this.messages.push({
+          sender: 'agent',
+          text: '🔑 **Gemini API Key Connected!** I am now powered by Google Gemini 2.5 Flash. Feel free to talk to me about any adjustments, soreness, or workout goals!',
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        });
+        alert('🔑 Gemini API Key saved successfully!');
+        this.renderActiveTab();
+      }
+    };
   }
 
   registerServiceWorker() {
@@ -64,12 +82,10 @@ class AdaptiveCoachApp {
 
   initHeaderButtons() {
     const checkinBtn = document.getElementById('hdr-checkin-btn');
-    const keyBtn = document.getElementById('hdr-key-btn');
     const pingBtn = document.getElementById('hdr-ping-btn');
     const profileBtn = document.getElementById('hdr-profile-btn');
 
     if (checkinBtn) checkinBtn.addEventListener('click', () => this.openCheckinModal());
-    if (keyBtn) keyBtn.addEventListener('click', () => this.openApiKeyModal());
 
     if (pingBtn) {
       pingBtn.addEventListener('click', async () => {
@@ -157,7 +173,7 @@ class AdaptiveCoachApp {
 
   handleChipClick(chipText) {
     if (chipText.includes('🔑 Set Gemini Key') || chipText.includes('Check Gemini Key')) {
-      this.openApiKeyModal();
+      if (window.openGeminiKeyModal) window.openGeminiKeyModal();
     } else if (chipText.includes('Check-in') || chipText.includes('Start Daily')) {
       this.openCheckinModal();
     } else if (chipText.includes('Show today\'s plan')) {
@@ -178,18 +194,6 @@ class AdaptiveCoachApp {
       // Trigger Gemini to summarize & customize checkin
       const promptText = `I completed my daily check-in: Energy ${checkInData.energyLevel}/10, Soreness ${checkInData.sorenessLevel}/10, Available time: ${checkInData.availableMinutes} mins, Sports today: ${checkInData.sportsToday.join(', ') || 'None'}. Please generate today's adaptive plan.`;
       await this.handleUserMessage(promptText);
-    });
-  }
-
-  openApiKeyModal() {
-    const modalContainer = document.getElementById('modal-container');
-    ApiKeyModalComponent.renderModal(modalContainer, (newKey) => {
-      this.messages.push({
-        sender: 'agent',
-        text: '🔑 **Gemini API Key Connected!** I am now powered by Google Gemini 2.5 Flash. Feel free to talk to me about any adjustments, soreness, or workout goals!',
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      });
-      this.renderActiveTab();
     });
   }
 
