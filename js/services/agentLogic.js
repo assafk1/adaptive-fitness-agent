@@ -1,4 +1,4 @@
-// Live Google Gemini AI Agent & Persona Engine with Dynamic ModelService.ListModels
+// Live Google Gemini AI Agent & Persona Engine with Filtered ModelService.ListModels
 
 import { Storage } from './storage.js';
 
@@ -15,6 +15,7 @@ export const AgentLogic = {
 
   /**
    * Fetches available models using Google Gemini ModelService.ListModels API
+   * Filters out deprecated/legacy models (bison, 1.0, 2.5-flash, etc.)
    */
   async fetchAvailableModels(apiKey) {
     const key = apiKey || this.getApiKey();
@@ -28,9 +29,21 @@ export const AgentLogic = {
       const data = await response.json();
       const models = data.models || [];
 
-      // Filter models supporting generateContent
+      // Deprecated/Legacy keywords to exclude
+      const deprecatedKeywords = ['bison', '1.0', '2.5-flash', 'legacy', 'deprecated', 'embedding', 'aqa', 'imagen'];
+
       return models
-        .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent'))
+        .filter(m => {
+          // 1. Must support generateContent
+          const supportsContent = m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent');
+          if (!supportsContent) return false;
+
+          const modelId = m.name.replace('models/', '').toLowerCase();
+
+          // 2. Filter out deprecated/legacy models
+          const isDeprecated = deprecatedKeywords.some(kw => modelId.includes(kw));
+          return !isDeprecated;
+        })
         .map(m => {
           const modelId = m.name.replace('models/', '');
           return {
