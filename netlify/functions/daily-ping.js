@@ -2,9 +2,14 @@
 
 const webpush = require('web-push');
 
-// Public VAPID Key pair for Adaptive Coach App
-const VAPID_PUBLIC_KEY = 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-Skv69yViEuiBIa-Ib9-Skv69yViEuiBIa';
-const VAPID_PRIVATE_KEY = 'YOUR_VAPID_PRIVATE_KEY_HERE';
+const VAPID_PUBLIC_KEY = 'BPC9fZVZYUddG_VIqKsR-xtmxiKvCk8SILEG0sf7iYTjb5apBe-gb4wGn4tH4vDLGgXsiVNovUu9P-8T_Iy_-nI';
+const VAPID_PRIVATE_KEY = 'Usu2IShEwZGNihsKImmQ1bAfB6F4BDqo3IdUnsvgtCg';
+
+webpush.setVapidDetails(
+  'mailto:adaptive-coach@example.com',
+  VAPID_PUBLIC_KEY,
+  VAPID_PRIVATE_KEY
+);
 
 exports.handler = async (event, context) => {
   console.log('⏰ Netlify Scheduled Daily Ping Triggered at:', new Date().toISOString());
@@ -19,6 +24,6 @@ exports.handler = async (event, context) => {
 
   return {
     statusCode: 200,
-    body: JSON.stringify({ message: 'Daily push trigger executed successfully', timestamp: new Date().toISOString() })
+    body: JSON.stringify({ message: 'Daily push function executed successfully', timestamp: new Date().toISOString() })
   };
 };
