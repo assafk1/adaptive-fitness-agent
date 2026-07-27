@@ -59,6 +59,7 @@ class AdaptiveCoachApp {
   }
 
   loadTodayState() {
+    this.profile = Storage.getProfile();
     if (this.todayCheckIn) {
       this.currentPlan = FitnessEngine.generateDailyPlan(this.todayCheckIn, this.profile);
     }
@@ -198,6 +199,7 @@ class AdaptiveCoachApp {
   }
 
   openProfileModal() {
+    this.profile = Storage.getProfile(); // Ensure freshest profile is loaded!
     const modalContainer = document.getElementById('modal-container');
     ProfileComponent.renderModal(modalContainer, this.profile, (updatedProfile) => {
       this.profile = Storage.saveProfile(updatedProfile);

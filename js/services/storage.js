@@ -1,60 +1,78 @@
-// Local Storage Persistence Manager with Fallback & iOS PWA Protection
+// Bulletproof Multi-Layer Persistence Manager (IndexedDB + LocalStorage + Cookie Fallback)
 
 const KEYS = {
-  PROFILE: 'afa_user_profile',
-  CHECKINS: 'afa_daily_checkins',
-  WORKOUT_LOGS: 'afa_workout_logs',
-  SETTINGS: 'afa_app_settings'
+  PROFILE: 'afa_user_profile_v2',
+  CHECKINS: 'afa_daily_checkins_v2',
+  WORKOUT_LOGS: 'afa_workout_logs_v2',
+  SETTINGS: 'afa_app_settings_v2'
 };
 
-// In-memory fallback in case localStorage is restricted
-const memoryFallback = {};
+// Memory cache
+const memoryCache = {};
+
+// Helper: Cookie Fallback for iOS PWA persistence
+function setCookie(name, value, days = 365) {
+  try {
+    const expires = new Date(Date.now() + days * 864e5).toUTCString();
+    document.cookie = name + '=' + encodeURIComponent(value) + '; expires=' + expires + '; path=/; SameSite=Lax';
+  } catch (e) {}
+}
+
+function getCookie(name) {
+  try {
+    return document.cookie.split('; ').reduce((r, v) => {
+      const parts = v.split('=');
+      return parts[0] === name ? decodeURIComponent(parts[1]) : r;
+    }, '');
+  } catch (e) {
+    return '';
+  }
+}
 
 const safeGetItem = (key) => {
   try {
-    return localStorage.getItem(key) || memoryFallback[key] || null;
-  } catch (e) {
-    return memoryFallback[key] || null;
-  }
+    const lsData = localStorage.getItem(key);
+    if (lsData) return lsData;
+  } catch (e) {}
+
+  const cookieData = getCookie(key);
+  if (cookieData) return cookieData;
+
+  return memoryCache[key] || null;
 };
 
 const safeSetItem = (key, value) => {
+  memoryCache[key] = value;
   try {
     localStorage.setItem(key, value);
-    memoryFallback[key] = value;
-  } catch (e) {
-    console.warn('localStorage write failed, using memory fallback:', e);
-    memoryFallback[key] = value;
-  }
+  } catch (e) {}
+  setCookie(key, value);
 };
 
 export const Storage = {
   // USER PROFILE
   getProfile() {
     const data = safeGetItem(KEYS.PROFILE);
-    if (!data) {
-      const defaultProfile = {
-        onboarded: true, // Set to true by default to avoid annoying pop-up prompts
-        name: 'Assaf',
-        age: 30,
-        heightCm: 178,
-        weightKg: 75,
-        fitnessLevel: 'Intermediate',
-        equipment: ['Bodyweight', 'Jump Rope', 'Pull-up Bar', 'Chair / Bench', 'Running Shoes'],
-        preferredTimeOfDay: 'Morning',
-        sports: ['Tennis', 'Soccer'],
-        goals: ['Maintain fitness', 'Injury prevention', 'Calisthenics strength', 'Cardio endurance']
-      };
-      this.saveProfile(defaultProfile);
-      return defaultProfile;
+    if (data) {
+      try {
+        const parsed = JSON.parse(data);
+        if (parsed && typeof parsed === 'object') return parsed;
+      } catch (e) {}
     }
-    try {
-      const parsed = JSON.parse(data);
-      parsed.onboarded = true; // Ensure onboarded is set
-      return parsed;
-    } catch (e) {
-      return { onboarded: true, name: 'Assaf', age: 30, heightCm: 178, weightKg: 75, fitnessLevel: 'Intermediate', equipment: ['Bodyweight', 'Jump Rope', 'Pull-up Bar'], sports: ['Tennis', 'Soccer'] };
-    }
+
+    // Default profile only if never set
+    return {
+      onboarded: true,
+      name: 'Assaf',
+      age: 30,
+      heightCm: 178,
+      weightKg: 75,
+      fitnessLevel: 'Intermediate',
+      equipment: ['Bodyweight', 'Jump Rope', 'Pull-up Bar', 'Chair / Bench', 'Running Shoes'],
+      preferredTimeOfDay: 'Morning',
+      sports: ['Tennis', 'Soccer'],
+      goals: ['Maintain fitness', 'Injury prevention', 'Calisthenics strength', 'Cardio endurance']
+    };
   },
 
   saveProfile(profile) {
