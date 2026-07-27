@@ -34,9 +34,9 @@ export const PushService = {
         Storage.saveSettings({ pushSubscription: subJson });
         
         // Sync device token to Netlify function endpoint for APNs push delivery
-        this.syncTokenToNetlify(subJson);
+        const synced = await this.syncTokenToNetlify(subJson);
         console.log('iPhone push subscription active and synced to Netlify!');
-        return true;
+        return synced;
       }
       return false;
     } catch (err) {
@@ -54,8 +54,10 @@ export const PushService = {
       });
       const data = await response.json();
       console.log('Netlify Push Sync Response:', data);
+      return data.status === 'success';
     } catch (err) {
       console.warn('Could not sync push token to Netlify function endpoint:', err);
+      return false;
     }
   },
 
