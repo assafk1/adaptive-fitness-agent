@@ -16,7 +16,7 @@ export const WorkoutComponent = {
         exercisesHtml += `
           <div class="routine-block">
             <h4>${routine.name || routine.title || 'Routine Block ' + (idx + 1)}</h4>
-            <p class="text-muted">${routine.description || ''}</p>
+            <p class="text-muted" style="margin-bottom: 12px; font-size: 14px;">${routine.description || ''}</p>
             ${routine.exercises ? routine.exercises.map(ex => this.renderExerciseRow(ex)).join('') : ''}
             ${routine.stretches ? routine.stretches.map(st => this.renderStretchRow(st)).join('') : ''}
             ${routine.rounds ? routine.rounds.map(rd => this.renderRoundRow(rd)).join('') : ''}
@@ -24,6 +24,13 @@ export const WorkoutComponent = {
           </div>
         `;
       });
+    } else if (plan.exercises && plan.exercises.length > 0) {
+      exercisesHtml += `
+        <div class="routine-block">
+          <h4>Custom AI Exercise Flow</h4>
+          ${plan.exercises.map(ex => this.renderExerciseRow(ex)).join('')}
+        </div>
+      `;
     } else if (plan.components) {
       const { mainComponent, cardioComponent, mobilityComponent } = plan.components;
       if (mainComponent && mainComponent.exercises) {
@@ -41,32 +48,34 @@ export const WorkoutComponent = {
       <div class="workout-card glassmorphism animate-fade-in">
         <div class="workout-header">
           <div class="workout-title-group">
-            <span class="badge badge-primary">${type}</span>
-            <h3>${title}</h3>
-            <p class="workout-summary">${summary}</p>
+            <span class="badge badge-primary">${type || 'Adaptive Workout'}</span>
+            <h3 style="margin-top: 6px;">${title || 'Today\'s Fitness Routine'}</h3>
+            <p class="workout-summary">${summary || ''}</p>
           </div>
           <div class="readiness-pill">
             <span class="pill-label">Readiness</span>
-            <span class="pill-value">${readinessScore}%</span>
+            <span class="pill-value">${readinessScore || 85}%</span>
           </div>
         </div>
 
         <div class="workout-meta-bar">
-          <span>⏱️ ${estimatedMinutes} Minutes</span>
-          <span>🔥 Adaptive Engine Tailored</span>
+          <span>⏱️ ${estimatedMinutes || 15} Minutes</span>
+          <span>🔥 Gemini AI Tailored</span>
           <button class="btn btn-outline btn-sm" id="launch-timer-btn">⏱️ Open Rest Timer</button>
         </div>
 
-        <div class="ai-coach-banner">
-          <div class="avatar-sm">🏃‍♂️</div>
-          <div class="coach-speech">${aiAdvice}</div>
-        </div>
+        ${aiAdvice ? `
+          <div class="ai-coach-banner">
+            <div class="avatar-sm">🏃‍♂️</div>
+            <div class="coach-speech">${aiAdvice}</div>
+          </div>
+        ` : ''}
 
         <div class="workout-body">
           ${exercisesHtml}
         </div>
 
-        <div class="workout-actions">
+        <div class="workout-actions" style="margin-top: 20px;">
           <button class="btn btn-success btn-block btn-lg" id="complete-workout-btn">✅ Log Session Completed</button>
         </div>
       </div>
@@ -85,10 +94,10 @@ export const WorkoutComponent = {
     if (completeBtn) {
       completeBtn.addEventListener('click', () => {
         onComplete({
-          title,
-          type,
-          durationMin: estimatedMinutes,
-          readinessScore
+          title: title || 'Completed Session',
+          type: type || 'Adaptive',
+          durationMin: estimatedMinutes || 15,
+          readinessScore: readinessScore || 85
         });
         alert('🎉 Great work! Session logged to your progress dashboard.');
       });
@@ -98,10 +107,10 @@ export const WorkoutComponent = {
   renderExerciseRow(ex) {
     if (!ex) return '';
     return `
-      <div class="exercise-item-row">
+      <div class="exercise-item-row" style="padding: 10px 0; border-bottom: 1px solid var(--border-glass);">
         <div class="exercise-info">
-          <span class="exercise-name">${ex.name}</span>
-          <span class="exercise-meta">${ex.defaultSets ? ex.defaultSets + ' Sets x ' : ''}${ex.defaultReps ? ex.defaultReps + ' Reps' : (ex.defaultDurationSec ? ex.defaultDurationSec + 's Hold' : '')}</span>
+          <span class="exercise-name" style="font-size: 15px;">${ex.name}</span>
+          <span class="exercise-meta">${ex.defaultSets ? ex.defaultSets + ' Sets x ' : ''}${ex.defaultReps ? ex.defaultReps + ' Reps' : (ex.defaultDurationSec ? Math.round(ex.defaultDurationSec / 60) + ' min hold' : '')}</span>
           <p class="exercise-tips">${ex.tips || ''}</p>
         </div>
         <div class="set-checkboxes">
@@ -113,9 +122,9 @@ export const WorkoutComponent = {
 
   renderStretchRow(st) {
     return `
-      <div class="exercise-item-row">
+      <div class="exercise-item-row" style="padding: 10px 0; border-bottom: 1px solid var(--border-glass);">
         <div class="exercise-info">
-          <span class="exercise-name">🧘 ${st.name}</span>
+          <span class="exercise-name" style="font-size: 15px;">🧘 ${st.name}</span>
           <span class="exercise-meta">${st.durationSec}s ${st.perSide ? 'per side' : 'hold'}</span>
           <p class="exercise-tips">${st.tips || ''}</p>
         </div>
@@ -128,9 +137,9 @@ export const WorkoutComponent = {
 
   renderRoundRow(rd) {
     return `
-      <div class="exercise-item-row">
+      <div class="exercise-item-row" style="padding: 10px 0; border-bottom: 1px solid var(--border-glass);">
         <div class="exercise-info">
-          <span class="exercise-name">⚡ ${rd.name}</span>
+          <span class="exercise-name" style="font-size: 15px;">⚡ ${rd.name}</span>
           <span class="exercise-meta">${rd.durationSec}s Work | ${rd.restSec || 0}s Rest</span>
           <p class="exercise-tips">${rd.tips || ''}</p>
         </div>
@@ -143,9 +152,9 @@ export const WorkoutComponent = {
 
   renderStructureRow(st) {
     return `
-      <div class="exercise-item-row">
+      <div class="exercise-item-row" style="padding: 10px 0; border-bottom: 1px solid var(--border-glass);">
         <div class="exercise-info">
-          <span class="exercise-name">🏃 ${st.phase}</span>
+          <span class="exercise-name" style="font-size: 15px;">🏃 ${st.phase}</span>
           <span class="exercise-meta">${Math.round(st.durationSec / 60)} Mins</span>
           <p class="exercise-tips">${st.notes || ''}</p>
         </div>
@@ -231,7 +240,6 @@ export const WorkoutComponent = {
             clearInterval(timerInterval);
             timerInterval = null;
             startBtn.textContent = '▶️ Start';
-            // Play audio beep
             try {
               const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
               const osc = audioCtx.createOscillator();

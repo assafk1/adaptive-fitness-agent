@@ -69,6 +69,7 @@ class AdaptiveCoachApp {
       this.messages.push({
         sender: 'agent',
         text: `🎯 **Today's Adaptive Plan:** ${this.currentPlan.title} (${this.currentPlan.estimatedMinutes} Mins)\nReadiness Score: ${this.currentPlan.readinessScore}%`,
+        plan: this.currentPlan,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       });
     }
@@ -139,7 +140,7 @@ class AdaptiveCoachApp {
     const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     this.messages.push({ sender: 'user', text, time: timeStr });
 
-    // Show temporary thinking message with selected model name
+    // Show temporary thinking message
     const selectedModel = AgentLogic.getSelectedModel();
     const thinkingMsgIndex = this.messages.length;
     this.messages.push({
@@ -151,19 +152,20 @@ class AdaptiveCoachApp {
 
     const response = await AgentLogic.processUserMessage(text, this.todayCheckIn, this.profile, this.currentPlan, this.messages);
 
-    // Replace thinking message with real Gemini response
+    if (response.updatedPlan) {
+      this.currentPlan = response.updatedPlan;
+    }
+
+    // Replace thinking message with real Gemini response + attach updatedPlan
     this.messages[thinkingMsgIndex] = {
       sender: 'agent',
       text: response.text,
+      plan: response.updatedPlan || null,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
 
     if (response.quickChips) {
       this.quickChips = response.quickChips;
-    }
-
-    if (response.updatedPlan) {
-      this.currentPlan = response.updatedPlan;
     }
 
     this.renderActiveTab();

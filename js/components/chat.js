@@ -1,19 +1,63 @@
-// Conversational Chat Interface Component
+// Conversational Chat Interface Component with Embedded Plan Widgets
 
 export const ChatComponent = {
   render(containerEl, messages = [], quickChips = [], onSendMessage, onChipClick, onOpenCheckin) {
-    const messagesHtml = messages.map(msg => `
-      <div class="chat-message ${msg.sender === 'user' ? 'msg-user' : 'msg-agent'} animate-fade-in">
-        <div class="msg-avatar">${msg.sender === 'user' ? '👤' : '🏃‍♂️'}</div>
-        <div class="msg-content glassmorphism">
-          <div class="msg-header">
-            <span class="msg-author">${msg.sender === 'user' ? 'You' : 'Adaptive Coach'}</span>
-            <span class="msg-time">${msg.time || ''}</span>
+    const messagesHtml = messages.map(msg => {
+      let planWidgetHtml = '';
+
+      if (msg.plan) {
+        const { title, type, estimatedMinutes, routines, exercises } = msg.plan;
+        let exerciseListHtml = '';
+
+        if (routines && routines.length > 0) {
+          routines.forEach(r => {
+            if (r.exercises) {
+              exerciseListHtml += r.exercises.map(ex => `
+                <div class="chat-ex-row">
+                  <span><strong>${ex.name}</strong></span>
+                  <span class="badge badge-primary">${ex.defaultSets ? ex.defaultSets + ' sets x ' : ''}${ex.defaultReps ? ex.defaultReps + ' reps' : (ex.defaultDurationSec ? Math.round(ex.defaultDurationSec / 60) + ' min hold' : '')}</span>
+                </div>
+              `).join('');
+            }
+          });
+        } else if (exercises && exercises.length > 0) {
+          exerciseListHtml += exercises.map(ex => `
+            <div class="chat-ex-row">
+              <span><strong>${ex.name}</strong></span>
+              <span class="badge badge-primary">${ex.defaultSets ? ex.defaultSets + ' sets x ' : ''}${ex.defaultReps ? ex.defaultReps + ' reps' : (ex.defaultDurationSec ? Math.round(ex.defaultDurationSec / 60) + ' min hold' : '')}</span>
+            </div>
+          `).join('');
+        }
+
+        planWidgetHtml = `
+          <div class="chat-plan-card glassmorphism" style="margin-top: 12px; padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--accent-primary);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span class="badge badge-primary">${type || 'Custom Plan'}</span>
+              <span style="font-size: 12px; color: var(--text-secondary);">⏱️ ${estimatedMinutes || 15} Mins</span>
+            </div>
+            <h4 style="margin-bottom: 8px; color: var(--text-primary);">${title || 'Adaptive Routine'}</h4>
+            <div class="chat-exercise-list" style="margin-bottom: 12px;">
+              ${exerciseListHtml}
+            </div>
+            <button class="btn btn-primary btn-sm btn-block view-plan-btn">🏋️ View & Track Full Workout Plan</button>
           </div>
-          <div class="msg-text">${msg.text.replace(/\n/g, '<br/>')}</div>
+        `;
+      }
+
+      return `
+        <div class="chat-message ${msg.sender === 'user' ? 'msg-user' : 'msg-agent'} animate-fade-in">
+          <div class="msg-avatar">${msg.sender === 'user' ? '👤' : '🏃‍♂️'}</div>
+          <div class="msg-content glassmorphism">
+            <div class="msg-header">
+              <span class="msg-author">${msg.sender === 'user' ? 'You' : 'Adaptive Coach'}</span>
+              <span class="msg-time">${msg.time || ''}</span>
+            </div>
+            <div class="msg-text">${msg.text.replace(/\n/g, '<br/>')}</div>
+            ${planWidgetHtml}
+          </div>
         </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
 
     const chipsHtml = quickChips.map(chip => `
       <button class="chip-action animate-pop">${chip}</button>
@@ -60,6 +104,11 @@ export const ChatComponent = {
     if (bannerBtn) {
       bannerBtn.addEventListener('click', () => onOpenCheckin());
     }
+
+    // View Plan buttons inside chat
+    containerEl.querySelectorAll('.view-plan-btn').forEach(btn => {
+      btn.addEventListener('click', () => onChipClick('Show today\'s plan'));
+    });
 
     const handleSend = () => {
       const text = inputField.value.trim();
