@@ -1,4 +1,4 @@
-// Live Google Gemini AI Agent & Persona Engine
+// Live Google Gemini AI Agent & Persona Engine with Dynamic ModelService.ListModels
 
 import { Storage } from './storage.js';
 
@@ -6,6 +6,43 @@ export const AgentLogic = {
   getApiKey() {
     const settings = Storage.getSettings();
     return (settings.apiKey || '').trim();
+  },
+
+  getSelectedModel() {
+    const settings = Storage.getSettings();
+    return settings.selectedModel || 'gemini-2.0-flash';
+  },
+
+  /**
+   * Fetches available models using Google Gemini ModelService.ListModels API
+   */
+  async fetchAvailableModels(apiKey) {
+    const key = apiKey || this.getApiKey();
+    if (!key) return [];
+
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${key}`;
+      const response = await fetch(url);
+      if (!response.ok) return [];
+
+      const data = await response.json();
+      const models = data.models || [];
+
+      // Filter models supporting generateContent
+      return models
+        .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent'))
+        .map(m => {
+          const modelId = m.name.replace('models/', '');
+          return {
+            id: modelId,
+            displayName: m.displayName || modelId,
+            description: m.description || ''
+          };
+        });
+    } catch (err) {
+      console.error('Error fetching ModelService.ListModels:', err);
+      return [];
+    }
   },
 
   getMorningGreeting(profile, hasCheckedInToday) {
@@ -93,8 +130,8 @@ You MUST respond with a JSON object matching this exact schema:
   }
 }`;
 
-    // Standard Gemini 2.0 & 1.5 Flash models
-    const models = ['gemini-2.0-flash', 'gemini-1.5-flash-latest'];
+    const chosenModel = this.getSelectedModel();
+    const models = [chosenModel, 'gemini-2.0-flash', 'gemini-1.5-flash-latest'].filter((v, i, a) => a.indexOf(v) === i);
     let lastError = null;
 
     for (const model of models) {
