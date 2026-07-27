@@ -10,6 +10,7 @@ import { CheckInComponent } from './components/checkin.js';
 import { WorkoutComponent } from './components/workout.js';
 import { ProfileComponent } from './components/profile.js';
 import { DashboardComponent } from './components/dashboard.js';
+import { ApiKeyModalComponent } from './components/apiKeyModal.js';
 
 class AdaptiveCoachApp {
   constructor() {
@@ -18,7 +19,7 @@ class AdaptiveCoachApp {
     this.currentPlan = null;
     this.messages = [];
     this.quickChips = [];
-    this.activeTab = 'chat'; // 'chat', 'plan', 'dashboard'
+    this.activeTab = 'chat';
 
     this.init();
   }
@@ -63,10 +64,12 @@ class AdaptiveCoachApp {
 
   initHeaderButtons() {
     const checkinBtn = document.getElementById('hdr-checkin-btn');
+    const keyBtn = document.getElementById('hdr-key-btn');
     const pingBtn = document.getElementById('hdr-ping-btn');
     const profileBtn = document.getElementById('hdr-profile-btn');
 
     if (checkinBtn) checkinBtn.addEventListener('click', () => this.openCheckinModal());
+    if (keyBtn) keyBtn.addEventListener('click', () => this.openApiKeyModal());
 
     if (pingBtn) {
       pingBtn.addEventListener('click', async () => {
@@ -119,28 +122,43 @@ class AdaptiveCoachApp {
     }
   }
 
-  handleUserMessage(text) {
+  async handleUserMessage(text) {
     const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     this.messages.push({ sender: 'user', text, time: timeStr });
 
-    const response = AgentLogic.processUserMessage(text, this.todayCheckIn, this.profile, this.currentPlan);
-
-    if (response.type === 'TRIGGER_CHECKIN_MODAL') {
-      this.openCheckinModal();
-    }
-
+    // Show temporary thinking message
+    const thinkingMsgIndex = this.messages.length;
     this.messages.push({
+      sender: 'agent',
+      text: '🤖 *Thinking and customizing your plan with Gemini AI...*',
+      time: timeStr
+    });
+    this.renderActiveTab();
+
+    const response = await AgentLogic.processUserMessage(text, this.todayCheckIn, this.profile, this.currentPlan, this.messages);
+
+    // Replace thinking message with real Gemini response
+    this.messages[thinkingMsgIndex] = {
       sender: 'agent',
       text: response.text,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    });
-    this.quickChips = response.quickChips;
+    };
+
+    if (response.quickChips) {
+      this.quickChips = response.quickChips;
+    }
+
+    if (response.updatedPlan) {
+      this.currentPlan = response.updatedPlan;
+    }
 
     this.renderActiveTab();
   }
 
   handleChipClick(chipText) {
-    if (chipText.includes('Check-in') || chipText.includes('Start Daily')) {
+    if (chipText.includes('🔑 Set Gemini Key') || chipText.includes('Check Gemini Key')) {
+      this.openApiKeyModal();
+    } else if (chipText.includes('Check-in') || chipText.includes('Start Daily')) {
       this.openCheckinModal();
     } else if (chipText.includes('Show today\'s plan')) {
       this.activeTab = 'plan';
@@ -153,19 +171,24 @@ class AdaptiveCoachApp {
 
   openCheckinModal() {
     const modalContainer = document.getElementById('modal-container');
-    CheckInComponent.renderModal(modalContainer, this.todayCheckIn, (checkInData) => {
+    CheckInComponent.renderModal(modalContainer, this.todayCheckIn, async (checkInData) => {
       this.todayCheckIn = Storage.saveDailyCheckIn(checkInData);
       this.currentPlan = FitnessEngine.generateDailyPlan(this.todayCheckIn, this.profile);
 
+      // Trigger Gemini to summarize & customize checkin
+      const promptText = `I completed my daily check-in: Energy ${checkInData.energyLevel}/10, Soreness ${checkInData.sorenessLevel}/10, Available time: ${checkInData.availableMinutes} mins, Sports today: ${checkInData.sportsToday.join(', ') || 'None'}. Please generate today's adaptive plan.`;
+      await this.handleUserMessage(promptText);
+    });
+  }
+
+  openApiKeyModal() {
+    const modalContainer = document.getElementById('modal-container');
+    ApiKeyModalComponent.renderModal(modalContainer, (newKey) => {
       this.messages.push({
         sender: 'agent',
-        text: `⚡ Check-in saved! Readiness Score: **${this.currentPlan.readinessScore}%**.\nGenerated Plan: **${this.currentPlan.title}** (${this.currentPlan.estimatedMinutes} Mins).\n\n${this.currentPlan.aiAdvice}`,
+        text: '🔑 **Gemini API Key Connected!** I am now powered by Google Gemini 2.5 Flash. Feel free to talk to me about any adjustments, soreness, or workout goals!',
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       });
-
-      this.quickChips = ['Show today\'s plan', 'Got 15 mins instead', 'Legs feel sore'];
-      this.activeTab = 'plan';
-      document.querySelectorAll('.tab-btn').forEach(t => t.classList.toggle('active', t.dataset.tab === 'plan'));
       this.renderActiveTab();
     });
   }
@@ -174,9 +197,6 @@ class AdaptiveCoachApp {
     const modalContainer = document.getElementById('modal-container');
     ProfileComponent.renderModal(modalContainer, this.profile, (updatedProfile) => {
       this.profile = Storage.saveProfile(updatedProfile);
-      if (this.todayCheckIn) {
-        this.currentPlan = FitnessEngine.generateDailyPlan(this.todayCheckIn, this.profile);
-      }
       alert('⚙️ Profile & equipment updated!');
       this.renderActiveTab();
     });

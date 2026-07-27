@@ -1,8 +1,15 @@
-// Conversational AI Coach Persona & Dialogue Engine
+// Live Google Gemini AI Agent & Persona Engine
+
+import { Storage } from './storage.js';
 
 export const AgentLogic = {
+  getApiKey() {
+    const settings = Storage.getSettings();
+    return settings.apiKey || '';
+  },
+
   getMorningGreeting(profile, hasCheckedInToday) {
-    const name = profile.name || 'friend';
+    const name = profile.name || 'Assaf';
     const hour = new Date().getHours();
     let timeOfDay = 'morning';
     if (hour >= 12 && hour < 17) timeOfDay = 'afternoon';
@@ -10,13 +17,13 @@ export const AgentLogic = {
 
     if (hasCheckedInToday) {
       return {
-        text: `Hey ${name}, good ${timeOfDay}! We've already set today's plan. How is your day going so far? Feel free to adjust today's session or ask any workout & recovery questions.`,
-        quickChips: ['Show today\'s plan', 'I feel more tired now', 'Update available time', 'Stretching routine']
+        text: `Hey ${name}, good ${timeOfDay}! We've already set today's plan. How is your day going so far? Feel free to ask me to adjust today's workout, swap exercises, or add recovery stretching!`,
+        quickChips: ['Show today\'s plan', 'I feel more tired now', 'Change today to 15 mins', 'Stretching routine']
       };
     }
 
     return {
-      text: `Good ${timeOfDay}, ${name}! 👋 I'm your adaptive coach. Let's align today's schedule and check how your body is feeling. 
+      text: `Good ${timeOfDay}, ${name}! 👋 I'm your adaptive Gemini AI coach. Let's align today's schedule and check how your body is feeling. 
       \nDo you have 15-30 minutes for a session today, or any external sports planned (like tennis, soccer, or running)?`,
       quickChips: [
         '⚡ Start Daily Check-in',
@@ -27,50 +34,103 @@ export const AgentLogic = {
     };
   },
 
-  processUserMessage(messageText, checkIn, profile, plan) {
-    const textLower = messageText.toLowerCase();
+  async processUserMessage(messageText, checkIn, profile, currentPlan, conversationHistory = []) {
+    const apiKey = this.getApiKey();
 
-    // 1. Trigger Check-in
-    if (textLower.includes('check-in') || textLower.includes('check in') || textLower.includes('start daily')) {
-      return {
-        type: 'TRIGGER_CHECKIN_MODAL',
-        text: "Awesome! Let's complete your 1-minute readiness check-in to generate today's adaptive plan.",
-        quickChips: ['Open Check-in']
-      };
-    }
-
-    // 2. Soreness / Injury mentions
-    if (textLower.includes('sore') || textLower.includes('hurt') || textLower.includes('pain') || textLower.includes('tired')) {
+    if (!apiKey) {
       return {
         type: 'TEXT',
-        text: `I hear you! Pain or heavy fatigue is your body's signal to slow down and rebuild. I can immediately switch today's target to active recovery, foam rolling, or gentle hip/shoulder mobility. Would you like a 15-min decompression flow instead?`,
-        quickChips: ['Yes, recovery flow', 'I can still do light core', 'Show stretching exercises']
+        text: `⚠️ **Gemini API Key Required**: To have a full-blown AI conversation and dynamic plan adjustments powered by Gemini, please click **🔑 Gemini Key** in the header to enter your free Google Gemini API key!`,
+        quickChips: ['🔑 Set Gemini Key', '⚡ Start Daily Check-in']
       };
     }
 
-    // 3. Tennis / Soccer / Running sports mentions
-    if (textLower.includes('tennis') || textLower.includes('soccer') || textLower.includes('run')) {
+    try {
+      const systemInstruction = `You are an expert, empathetic, evidence-based AI Adaptive Home Fitness & Recovery Coach.
+Your user is ${profile.name || 'Assaf'}.
+Core philosophy: 100% adaptive, daily readiness, zero rigid calendar schedules, injury/burnout prevention, and recovery prioritization.
+
+User Profile:
+- Age: ${profile.age}, Height: ${profile.heightCm}cm, Weight: ${profile.weightKg}kg
+- Fitness Level: ${profile.fitnessLevel}
+- Available Equipment: ${profile.equipment.join(', ')}
+- Favorite External Sports: ${profile.sports.join(', ')}
+
+Today's Check-in Data:
+${checkIn ? JSON.stringify(checkIn) : 'No check-in completed yet today.'}
+
+Current Active Plan:
+${currentPlan ? JSON.stringify(currentPlan) : 'None'}
+
+User Message: "${messageText}"
+
+CRITICAL: You MUST respond ONLY with a valid JSON object matching this exact schema (no markdown formatting around the JSON):
+{
+  "speech": "Your natural, encouraging, conversational response directly addressing the user's message and explaining any adjustments.",
+  "quickChips": ["3-4 contextual follow-up quick reply options"],
+  "updatedPlan": {
+    "type": "Workout Type (e.g. Express Calisthenics, Active Recovery, Sports Support, Running HIIT)",
+    "title": "Title of today's plan",
+    "summary": "Brief summary",
+    "readinessScore": 85,
+    "estimatedMinutes": 20,
+    "aiAdvice": "Targeted coach advice for today",
+    "routines": [
+      {
+        "name": "Routine Block Name",
+        "description": "Routine description",
+        "exercises": [
+          {
+            "name": "Exercise Name",
+            "defaultSets": 3,
+            "defaultReps": 12,
+            "defaultDurationSec": 0,
+            "restSec": 45,
+            "tips": "Form tip"
+          }
+        ]
+      }
+    ]
+  }
+}`;
+
+      // Call Google Gemini REST API (gemini-2.5-flash or fallback gemini-1.5-flash)
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: systemInstruction }] }]
+        })
+      });
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error?.message || `Gemini API returned status ${response.status}`);
+      }
+
+      const data = await response.json();
+      const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      
+      // Clean markdown code fence if returned
+      const jsonText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+      const parsed = JSON.parse(jsonText);
+
       return {
         type: 'TEXT',
-        text: `Great to hear! Playing sports is fantastic cardio. To prevent burnout and keep your knees/ankles safe, I recommend doing our 12-min Dynamic Activation Warm-up before your match, and a 15-min lower body relief stretch afterwards.`,
-        quickChips: ['Show Pre-match Warm-up', 'Show Post-match Stretch', 'I have 30 mins after']
+        text: parsed.speech || "I've updated your plan based on our conversation!",
+        quickChips: parsed.quickChips || ['Show today\'s plan', 'I feel more tired now'],
+        updatedPlan: parsed.updatedPlan || null
       };
-    }
 
-    // 4. Time constraints
-    if (textLower.includes('15') || textLower.includes('quick') || textLower.includes('busy')) {
+    } catch (err) {
+      console.error('Error calling Gemini API:', err);
       return {
         type: 'TEXT',
-        text: `Got it! Short sessions done consistently beat long, missed workouts every time. I've tailored a high-efficiency 15-minute express routine for you.`,
-        quickChips: ['Start 15-min Workout', 'Show Exercise List', 'Snooze to evening']
+        text: `⚠️ **Gemini AI Connection Error**: ${err.message}. Please check your API key or network connection.`,
+        quickChips: ['🔑 Check Gemini Key', 'Retry message']
       };
     }
-
-    // 5. Default General Coach Response
-    return {
-      type: 'TEXT',
-      text: `I'm here with you every step of the way! Remember: consistency over intensity. How can I adjust your training or recovery right now?`,
-      quickChips: ['⚡ Start Daily Check-in', 'Show today\'s plan', 'Calisthenics tips', 'Running warm-up']
-    };
   }
 };
