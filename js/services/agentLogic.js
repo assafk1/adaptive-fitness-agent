@@ -93,8 +93,15 @@ CRITICAL: You MUST respond ONLY with a valid JSON object matching this exact sch
   }
 }`;
 
-    // List of Gemini models to try (Primary: gemini-2.0-flash, Fallback: gemini-1.5-flash)
-    const models = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+    // Exact Google AI Studio Gemini Model Endpoints
+    const models = [
+      'gemini-2.0-flash',
+      'gemini-1.5-flash-latest',
+      'gemini-1.5-flash-002',
+      'gemini-1.5-flash-001',
+      'gemini-2.5-flash'
+    ];
+    
     let lastError = null;
 
     for (const model of models) {
@@ -128,7 +135,7 @@ CRITICAL: You MUST respond ONLY with a valid JSON object matching this exact sch
           updatedPlan: parsed.updatedPlan || null
         };
       } catch (err) {
-        console.warn(`Model ${model} failed, trying next...`, err);
+        console.warn(`Model ${model} failed:`, err.message);
         lastError = err;
       }
     }
