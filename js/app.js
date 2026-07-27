@@ -1,4 +1,4 @@
-// Main Application Controller
+// Main Application Controller with On-Screen Push Debug Logging
 
 import { Storage } from './services/storage.js';
 import { FitnessEngine } from './services/fitnessEngine.js';
@@ -77,22 +77,25 @@ class AdaptiveCoachApp {
 
   initHeaderButtons() {
     const checkinBtn = document.getElementById('hdr-checkin-btn');
-    const keyBtn = document.getElementById('hdr-key-btn');
     const pingBtn = document.getElementById('hdr-ping-btn');
     const profileBtn = document.getElementById('hdr-profile-btn');
 
     if (checkinBtn) checkinBtn.addEventListener('click', () => this.openCheckinModal());
-    if (keyBtn) keyBtn.addEventListener('click', () => this.openApiKeyModal());
 
     if (pingBtn) {
       pingBtn.addEventListener('click', async () => {
-        const granted = await NotificationManager.requestPermission();
-        await PushService.registerSubscription();
-        if (granted) {
-          NotificationManager.sendTestNotification();
-        } else {
-          alert('Notifications requested! Check your device settings.');
-        }
+        const result = await PushService.registerSubscription();
+        
+        // Display full debug log in chat
+        const logText = `🔔 **Push Registration Debug Log:**\n\n` + result.logs.map(l => `• ${l}`).join('\n');
+        this.messages.push({
+          sender: 'agent',
+          text: logText,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        });
+        
+        NotificationManager.sendTestNotification();
+        this.renderActiveTab();
       });
     }
 
@@ -140,7 +143,6 @@ class AdaptiveCoachApp {
     const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     this.messages.push({ sender: 'user', text, time: timeStr });
 
-    // Show temporary thinking message
     const selectedModel = AgentLogic.getSelectedModel();
     const thinkingMsgIndex = this.messages.length;
     this.messages.push({
@@ -156,7 +158,6 @@ class AdaptiveCoachApp {
       this.currentPlan = response.updatedPlan;
     }
 
-    // Replace thinking message with real Gemini response + attach updatedPlan
     this.messages[thinkingMsgIndex] = {
       sender: 'agent',
       text: response.text,
@@ -191,7 +192,6 @@ class AdaptiveCoachApp {
       this.todayCheckIn = Storage.saveDailyCheckIn(checkInData);
       this.currentPlan = FitnessEngine.generateDailyPlan(this.todayCheckIn, this.profile);
 
-      // Trigger Gemini to summarize & customize checkin
       const promptText = `I completed my daily check-in: Energy ${checkInData.energyLevel}/10, Soreness ${checkInData.sorenessLevel}/10, Available time: ${checkInData.availableMinutes} mins, Sports today: ${checkInData.sportsToday.join(', ') || 'None'}. Please generate today's adaptive plan.`;
       await this.handleUserMessage(promptText);
     });

@@ -1,62 +1,94 @@
-// Client-Side WebPush Subscription & Sync Service
+// Client-Side WebPush Subscription & Sync Service with Comprehensive Debug Logging
 
 import { Storage } from './storage.js';
 
 export const PushService = {
   async registerSubscription() {
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-      console.warn('PushManager not supported on this device/browser.');
-      return false;
+    const logs = [];
+    const addLog = (msg) => {
+      console.log(`[PUSH-DEBUG] ${msg}`);
+      logs.push(msg);
+    };
+
+    addLog('Starting iPhone push registration check...');
+
+    if (!('serviceWorker' in navigator)) {
+      addLog('❌ ServiceWorker not supported on this browser.');
+      return { success: false, logs };
+    }
+
+    if (!('PushManager' in window)) {
+      addLog('❌ PushManager not supported in this window context. (Make sure app is added to iOS Home Screen).');
+      return { success: false, logs };
     }
 
     try {
+      addLog('Waiting for ServiceWorker ready state...');
       const registration = await navigator.serviceWorker.ready;
+      addLog(`ServiceWorker active: ${registration.scope}`);
+
       let subscription = await registration.pushManager.getSubscription();
 
       const vapidPublicKey = 'BPC9fZVZYUddG_VIqKsR-xtmxiKvCk8SILEG0sf7iYTjb5apBe-gb4wGn4tH4vDLGgXsiVNovUu9P-8T_Iy_-nI';
 
-      if (!subscription) {
+      if (subscription) {
+        addLog('Existing push subscription token found on device.');
+      } else {
+        addLog(`Notification permission state: ${Notification.permission}`);
         const permission = await Notification.requestPermission();
-        if (permission !== 'granted') return false;
+        addLog(`New notification permission result: ${permission}`);
 
+        if (permission !== 'granted') {
+          addLog('❌ User denied notification permission.');
+          return { success: false, logs };
+        }
+
+        addLog('Generating new PushSubscription token with VAPID key...');
         try {
           subscription = await registration.pushManager.subscribe({
             userVisibleOnly: true,
             applicationServerKey: this.urlBase64ToUint8Array(vapidPublicKey)
           });
-        } catch (e) {
-          console.log('Push subscription registration notice:', e);
+          addLog('✅ PushSubscription token generated successfully!');
+        } catch (subErr) {
+          addLog(`❌ pushManager.subscribe failed: ${subErr.message}`);
+          return { success: false, logs };
         }
       }
 
       if (subscription) {
         const subJson = subscription.toJSON();
         Storage.saveSettings({ pushSubscription: subJson });
-        
-        // Sync device token to Netlify function endpoint for APNs push delivery
-        const synced = await this.syncTokenToNetlify(subJson);
-        console.log('iPhone push subscription active and synced to Netlify!');
-        return synced;
+        addLog('Saved token to local storage.');
+
+        addLog('Sending POST request to Netlify sync endpoint (/.netlify/functions/daily-ping)...');
+        const syncResult = await this.syncTokenToNetlify(subJson, addLog);
+
+        return { success: syncResult, logs };
       }
-      return false;
+
+      return { success: false, logs };
     } catch (err) {
-      console.error('Error registering push subscription:', err);
-      return false;
+      addLog(`❌ Fatal error in push registration: ${err.message}`);
+      return { success: false, logs };
     }
   },
 
-  async syncTokenToNetlify(subscriptionJson) {
+  async syncTokenToNetlify(subscriptionJson, addLog) {
     try {
       const response = await fetch('/.netlify/functions/daily-ping', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ subscription: subscriptionJson })
       });
+
+      addLog(`Netlify sync HTTP status: ${response.status}`);
       const data = await response.json();
-      console.log('Netlify Push Sync Response:', data);
-      return data.status === 'success';
+      addLog(`Netlify sync response payload: ${JSON.stringify(data)}`);
+
+      return response.ok && data.status === 'success';
     } catch (err) {
-      console.warn('Could not sync push token to Netlify function endpoint:', err);
+      addLog(`❌ Sync request to Netlify failed: ${err.message}`);
       return false;
     }
   },
