@@ -5,7 +5,7 @@ import { Storage } from './storage.js';
 export const AgentLogic = {
   getApiKey() {
     const settings = Storage.getSettings();
-    return settings.apiKey || '';
+    return (settings.apiKey || '').trim();
   },
 
   getMorningGreeting(profile, hasCheckedInToday) {
@@ -45,7 +45,7 @@ export const AgentLogic = {
       };
     }
 
-    const systemInstruction = `You are an expert, empathetic, evidence-based AI Adaptive Home Fitness & Recovery Coach.
+    const systemPromptText = `You are an expert, empathetic, evidence-based AI Adaptive Home Fitness & Recovery Coach.
 Your user is ${profile.name || 'Assaf'}.
 Core philosophy: 100% adaptive, daily readiness, zero rigid calendar schedules, injury/burnout prevention, and recovery prioritization.
 
@@ -61,9 +61,9 @@ ${checkIn ? JSON.stringify(checkIn) : 'No check-in completed yet today.'}
 Current Active Plan:
 ${currentPlan ? JSON.stringify(currentPlan) : 'None'}
 
-User Message: "${messageText}"
+User Request: "${messageText}"
 
-CRITICAL: You MUST respond ONLY with a valid JSON object matching this exact schema (no markdown formatting around the JSON):
+You MUST respond with a JSON object matching this exact schema:
 {
   "speech": "Your natural, encouraging, conversational response directly addressing the user's message and explaining any adjustments.",
   "quickChips": ["3-4 contextual follow-up quick reply options"],
@@ -93,38 +93,42 @@ CRITICAL: You MUST respond ONLY with a valid JSON object matching this exact sch
   }
 }`;
 
-    // Exact Google AI Studio Gemini Model Endpoints
-    const models = [
-      'gemini-2.0-flash',
-      'gemini-1.5-flash-latest',
-      'gemini-1.5-flash-002',
-      'gemini-1.5-flash-001',
-      'gemini-2.5-flash'
-    ];
-    
+    // Standard Gemini 2.0 & 1.5 Flash models
+    const models = ['gemini-2.0-flash', 'gemini-1.5-flash-latest'];
     let lastError = null;
 
     for (const model of models) {
       try {
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
+        const payload = {
+          system_instruction: {
+            parts: [{ text: systemPromptText }]
+          },
+          contents: [
+            {
+              role: 'user',
+              parts: [{ text: messageText }]
+            }
+          ],
+          generationConfig: {
+            response_mime_type: 'application/json'
+          }
+        };
+
         const response = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: systemInstruction }] }]
-          })
+          body: JSON.stringify(payload)
         });
 
+        const data = await response.json();
+
         if (!response.ok) {
-          const errData = await response.json().catch(() => ({}));
-          throw new Error(errData.error?.message || `Status ${response.status}`);
+          throw new Error(data.error?.message || `API Error ${response.status}`);
         }
 
-        const data = await response.json();
         const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-        
-        // Clean markdown code fence if returned
         const jsonText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
         const parsed = JSON.parse(jsonText);
 
@@ -135,14 +139,14 @@ CRITICAL: You MUST respond ONLY with a valid JSON object matching this exact sch
           updatedPlan: parsed.updatedPlan || null
         };
       } catch (err) {
-        console.warn(`Model ${model} failed:`, err.message);
+        console.warn(`Model ${model} call failed:`, err.message);
         lastError = err;
       }
     }
 
     return {
       type: 'TEXT',
-      text: `⚠️ **Gemini AI Error**: ${lastError?.message || 'Failed to connect to Gemini'}. Please check your API key.`,
+      text: `⚠️ **Gemini AI Error**: ${lastError?.message || 'Failed to connect to Gemini'}. Please check your API key by tapping 🔑 Gemini Key.`,
       quickChips: ['🔑 Check Gemini Key', 'Retry message']
     };
   }
