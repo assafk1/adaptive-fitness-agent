@@ -4,6 +4,7 @@ import { Storage } from './services/storage.js';
 import { FitnessEngine } from './services/fitnessEngine.js';
 import { AgentLogic } from './services/agentLogic.js';
 import { NotificationManager } from './components/notifications.js';
+import { PushService } from './services/pushService.js';
 
 import { ChatComponent } from './components/chat.js';
 import { CheckInComponent } from './components/checkin.js';
@@ -53,7 +54,10 @@ class AdaptiveCoachApp {
   registerServiceWorker() {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./sw.js')
-        .then(reg => console.log('Service Worker registered:', reg.scope))
+        .then(async reg => {
+          console.log('Service Worker registered:', reg.scope);
+          await PushService.registerSubscription();
+        })
         .catch(err => console.error('Service Worker registration failed:', err));
     }
   }
@@ -91,6 +95,7 @@ class AdaptiveCoachApp {
     if (pingBtn) {
       pingBtn.addEventListener('click', async () => {
         const granted = await NotificationManager.requestPermission();
+        await PushService.registerSubscription();
         if (granted) {
           NotificationManager.sendTestNotification();
         } else {
@@ -199,7 +204,7 @@ class AdaptiveCoachApp {
   }
 
   openProfileModal() {
-    this.profile = Storage.getProfile(); // Ensure freshest profile is loaded!
+    this.profile = Storage.getProfile();
     const modalContainer = document.getElementById('modal-container');
     ProfileComponent.renderModal(modalContainer, this.profile, (updatedProfile) => {
       this.profile = Storage.saveProfile(updatedProfile);

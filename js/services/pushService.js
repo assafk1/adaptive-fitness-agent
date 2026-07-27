@@ -1,4 +1,6 @@
-// Client-Side WebPush Subscription Service
+// Client-Side WebPush Subscription Service for iOS PWA
+
+import { Storage } from './storage.js';
 
 export const PushService = {
   async registerSubscription() {
@@ -12,16 +14,42 @@ export const PushService = {
       let subscription = await registration.pushManager.getSubscription();
 
       if (!subscription) {
-        // Request subscription permission
         const permission = await Notification.requestPermission();
         if (permission !== 'granted') return false;
 
-        console.log('Push permission granted! Subscribed to lock-screen push alerts.');
+        // Public VAPID Key
+        const vapidPublicKey = 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-Skv69yViEuiBIa-Ib9-Skv69yViEuiBIa';
+        
+        try {
+          subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: this.urlBase64ToUint8Array(vapidPublicKey)
+          });
+        } catch (e) {
+          console.log('Push subscription registration notice:', e);
+        }
       }
-      return true;
+
+      if (subscription) {
+        Storage.saveSettings({ pushSubscription: subscription.toJSON() });
+        console.log('iPhone push subscription active!');
+        return true;
+      }
+      return false;
     } catch (err) {
       console.error('Error registering push subscription:', err);
       return false;
     }
+  },
+
+  urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
   }
 };
