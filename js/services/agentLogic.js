@@ -45,8 +45,7 @@ export const AgentLogic = {
       };
     }
 
-    try {
-      const systemInstruction = `You are an expert, empathetic, evidence-based AI Adaptive Home Fitness & Recovery Coach.
+    const systemInstruction = `You are an expert, empathetic, evidence-based AI Adaptive Home Fitness & Recovery Coach.
 Your user is ${profile.name || 'Assaf'}.
 Core philosophy: 100% adaptive, daily readiness, zero rigid calendar schedules, injury/burnout prevention, and recovery prioritization.
 
@@ -94,43 +93,50 @@ CRITICAL: You MUST respond ONLY with a valid JSON object matching this exact sch
   }
 }`;
 
-      // Call Google Gemini REST API (gemini-2.5-flash or fallback gemini-1.5-flash)
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+    // List of Gemini models to try (Primary: gemini-2.0-flash, Fallback: gemini-1.5-flash)
+    const models = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+    let lastError = null;
 
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: systemInstruction }] }]
-        })
-      });
+    for (const model of models) {
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
-      if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.error?.message || `Gemini API returned status ${response.status}`);
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: systemInstruction }] }]
+          })
+        });
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.error?.message || `Status ${response.status}`);
+        }
+
+        const data = await response.json();
+        const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        
+        // Clean markdown code fence if returned
+        const jsonText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+        const parsed = JSON.parse(jsonText);
+
+        return {
+          type: 'TEXT',
+          text: parsed.speech || "I've updated your plan based on our conversation!",
+          quickChips: parsed.quickChips || ['Show today\'s plan', 'I feel more tired now'],
+          updatedPlan: parsed.updatedPlan || null
+        };
+      } catch (err) {
+        console.warn(`Model ${model} failed, trying next...`, err);
+        lastError = err;
       }
-
-      const data = await response.json();
-      const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-      
-      // Clean markdown code fence if returned
-      const jsonText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
-      const parsed = JSON.parse(jsonText);
-
-      return {
-        type: 'TEXT',
-        text: parsed.speech || "I've updated your plan based on our conversation!",
-        quickChips: parsed.quickChips || ['Show today\'s plan', 'I feel more tired now'],
-        updatedPlan: parsed.updatedPlan || null
-      };
-
-    } catch (err) {
-      console.error('Error calling Gemini API:', err);
-      return {
-        type: 'TEXT',
-        text: `⚠️ **Gemini AI Connection Error**: ${err.message}. Please check your API key or network connection.`,
-        quickChips: ['🔑 Check Gemini Key', 'Retry message']
-      };
     }
+
+    return {
+      type: 'TEXT',
+      text: `⚠️ **Gemini AI Error**: ${lastError?.message || 'Failed to connect to Gemini'}. Please check your API key.`,
+      quickChips: ['🔑 Check Gemini Key', 'Retry message']
+    };
   }
 };
