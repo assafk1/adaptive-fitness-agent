@@ -1,8 +1,13 @@
-// User Profile & Onboarding Component
+// User Profile & Onboarding Component with Morning Notification Time Picker
+
+import { Storage } from '../services/storage.js';
 
 export const ProfileComponent = {
   renderModal(containerEl, profile, onSave) {
-    const { name = 'Assaf', age = 30, heightCm = 178, weightKg = 75, fitnessLevel = 'Intermediate', equipment = [], sports = [], goals = [] } = profile;
+    const settings = Storage.getSettings();
+    const morningPingTime = settings.morningPingTime || '08:00';
+
+    const { name = 'Assaf', age = 30, heightCm = 178, weightKg = 75, fitnessLevel = 'Intermediate', equipment = [], sports = [] } = profile;
 
     const eqOptions = ['Bodyweight', 'Jump Rope', 'Pull-up Bar', 'Chair / Bench', 'Resistance Bands', 'Running Shoes'];
     const sportOptions = ['Tennis', 'Soccer', 'Running', 'Basketball', 'Swimming'];
@@ -11,11 +16,20 @@ export const ProfileComponent = {
       <div class="modal-overlay" id="profile-modal">
         <div class="modal-card glassmorphism animate-fade-in">
           <div class="modal-header">
-            <h3>⚙️ Personal Fitness Profile & Equipment</h3>
+            <h3>⚙️ Profile & Daily Push Notification Settings</h3>
             <button class="btn-icon" id="close-profile-btn">&times;</button>
           </div>
 
           <form id="profile-form">
+            <!-- 1. DAILY MORNING PING TIME -->
+            <div class="form-group" style="background: rgba(16, 185, 129, 0.1); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--accent-primary);">
+              <label class="form-label">⏰ Preferred Daily Push Notification Time</label>
+              <input type="time" id="prof-ping-time" value="${morningPingTime}" class="custom-input" style="font-size: 16px; font-weight: bold; color: var(--accent-primary);" required />
+              <span class="text-muted" style="font-size: 12px; margin-top: 4px; display: block;">
+                Your iPhone will send your daily morning check-in alert at this exact time every day.
+              </span>
+            </div>
+
             <div class="form-row">
               <div class="form-group col-6">
                 <label class="form-label">Name</label>
@@ -48,7 +62,7 @@ export const ProfileComponent = {
             </div>
 
             <div class="form-group">
-              <label class="form-label">🛠️ Available Equipment Home / Bag</label>
+              <label class="form-label">🛠️ Available Equipment</label>
               <div class="tag-chips-grid">
                 ${eqOptions.map(eq => `
                   <label class="checkbox-tag">
@@ -70,7 +84,7 @@ export const ProfileComponent = {
             </div>
 
             <div class="modal-footer">
-              <button type="submit" class="btn btn-primary btn-block">💾 Save Profile</button>
+              <button type="submit" class="btn btn-primary btn-block">💾 Save Settings</button>
             </div>
           </form>
         </div>
@@ -86,6 +100,9 @@ export const ProfileComponent = {
 
     form.addEventListener('submit', (e) => {
       e.preventDefault();
+      const pingTimeVal = document.getElementById('prof-ping-time').value;
+      Storage.saveSettings({ morningPingTime: pingTimeVal });
+
       const updatedProfile = {
         ...profile,
         name: document.getElementById('prof-name').value.trim(),
