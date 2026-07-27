@@ -1,11 +1,11 @@
 // Service Worker for Adaptive Coach PWA & iOS Native Push Notifications
 
-const CACHE_NAME = 'adaptive-coach-v1';
+const CACHE_NAME = 'adaptive-coach-v2';
 const ASSETS_TO_CACHE = [
   './',
-  './index.html',
-  './css/styles.css',
-  './js/app.js',
+  './index.html?v=2',
+  './css/styles.css?v=2',
+  './js/app.js?v=2',
   './manifest.json'
 ];
 
@@ -24,6 +24,7 @@ self.addEventListener('activate', event => {
       return Promise.all(
         cacheNames.map(cache => {
           if (cache !== CACHE_NAME) {
+            console.log('Deleting old Service Worker cache:', cache);
             return caches.delete(cache);
           }
         })
@@ -33,12 +34,14 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// Fetch event listener
+// Network-first fetch strategy to ensure fresh updates are always loaded
 self.addEventListener('fetch', event => {
   event.respondWith(
-    caches.match(event.request).then(response => {
-      return response || fetch(event.request);
-    })
+    fetch(event.request).then(response => {
+      const responseClone = response.clone();
+      caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseClone));
+      return response;
+    }).catch(() => caches.match(event.request))
   );
 });
 
