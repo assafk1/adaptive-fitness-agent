@@ -1,4 +1,4 @@
-// Client-Side WebPush Subscription Service for iOS PWA
+// Client-Side WebPush Subscription & Sync Service
 
 import { Storage } from './storage.js';
 
@@ -13,7 +13,6 @@ export const PushService = {
       const registration = await navigator.serviceWorker.ready;
       let subscription = await registration.pushManager.getSubscription();
 
-      // Valid VAPID Public Key matching Netlify function
       const vapidPublicKey = 'BPC9fZVZYUddG_VIqKsR-xtmxiKvCk8SILEG0sf7iYTjb5apBe-gb4wGn4tH4vDLGgXsiVNovUu9P-8T_Iy_-nI';
 
       if (!subscription) {
@@ -31,14 +30,32 @@ export const PushService = {
       }
 
       if (subscription) {
-        Storage.saveSettings({ pushSubscription: subscription.toJSON() });
-        console.log('iPhone push subscription active with VAPID key!');
+        const subJson = subscription.toJSON();
+        Storage.saveSettings({ pushSubscription: subJson });
+        
+        // Sync device token to Netlify function endpoint for APNs push delivery
+        this.syncTokenToNetlify(subJson);
+        console.log('iPhone push subscription active and synced to Netlify!');
         return true;
       }
       return false;
     } catch (err) {
       console.error('Error registering push subscription:', err);
       return false;
+    }
+  },
+
+  async syncTokenToNetlify(subscriptionJson) {
+    try {
+      const response = await fetch('/.netlify/functions/daily-ping', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subscription: subscriptionJson })
+      });
+      const data = await response.json();
+      console.log('Netlify Push Sync Response:', data);
+    } catch (err) {
+      console.warn('Could not sync push token to Netlify function endpoint:', err);
     }
   },
 
