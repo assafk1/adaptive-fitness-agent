@@ -1,12 +1,12 @@
-// User Profile Component with Push Token Export for GitHub Actions
+// User Profile Component with Always-Visible Push Token Export for GitHub Actions
 
 import { Storage } from '../services/storage.js';
+import { PushService } from '../services/pushService.js';
 
 export const ProfileComponent = {
-  renderModal(containerEl, profile, onSave) {
+  async renderModal(containerEl, profile, onSave) {
     const settings = Storage.getSettings();
     const morningPingTime = settings.morningPingTime || '08:00';
-    const tokenObj = settings.pushSubscription || null;
 
     const { name = 'Assaf', age = 30, heightCm = 178, weightKg = 75, fitnessLevel = 'Intermediate', equipment = [], sports = [] } = profile;
 
@@ -29,7 +29,7 @@ export const ProfileComponent = {
               <span class="text-muted" style="font-size: 12px; margin-top: 4px; display: block;">
                 Your iPhone receives morning check-in alerts at this time every day.
               </span>
-              ${tokenObj ? `<button type="button" class="btn btn-outline btn-sm" id="copy-token-btn" style="margin-top: 10px;">📋 Copy iPhone Push Token (for GitHub Secret)</button>` : ''}
+              <button type="button" class="btn btn-outline btn-sm" id="copy-token-btn" style="margin-top: 10px; width: 100%;">📋 Copy iPhone Push Token (for GitHub Secret)</button>
             </div>
 
             <div class="form-row">
@@ -100,9 +100,25 @@ export const ProfileComponent = {
     const copyTokenBtn = document.getElementById('copy-token-btn');
 
     if (copyTokenBtn) {
-      copyTokenBtn.addEventListener('click', () => {
-        navigator.clipboard.writeText(JSON.stringify(tokenObj));
-        alert('📋 iPhone Push Token copied to clipboard! Paste it into GitHub Secrets as IPHONE_PUSH_TOKEN.');
+      copyTokenBtn.addEventListener('click', async () => {
+        copyTokenBtn.textContent = '⌛ Generating & Copying Token...';
+        await PushService.registerSubscription();
+        const latestSettings = Storage.getSettings();
+        const tokenObj = latestSettings.pushSubscription;
+
+        if (tokenObj) {
+          const tokenStr = JSON.stringify(tokenObj);
+          try {
+            await navigator.clipboard.writeText(tokenStr);
+            alert('📋 iPhone Push Token copied to clipboard! Paste it into GitHub Secrets as IPHONE_PUSH_TOKEN.');
+          } catch (e) {
+            prompt('📋 Copy your iPhone Push Token (Ctrl+C / Cmd+C):', tokenStr);
+          }
+          copyTokenBtn.textContent = '📋 Token Copied!';
+        } else {
+          alert('⚠️ Please allow notifications on your iPhone first, then tap Copy again.');
+          copyTokenBtn.textContent = '📋 Copy iPhone Push Token (for GitHub Secret)';
+        }
       });
     }
 
