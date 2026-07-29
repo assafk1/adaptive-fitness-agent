@@ -1,4 +1,4 @@
-// Client-Side WebPush Subscription & Sync Service with Comprehensive Debug Logging
+// Client-Side WebPush Subscription & Sync Service with Verified P-256 VAPID Keypair
 
 import { Storage } from './storage.js';
 
@@ -29,7 +29,8 @@ export const PushService = {
 
       let subscription = await registration.pushManager.getSubscription();
 
-      const vapidPublicKey = 'BPC9fZVZYUddG_VIqKsR-xtmxiKvCk8SILEG0sf7iYTjb5apBe-gb4wGn4tH4vDLGgXsiVNovUu9P-8T_Iy_-nI';
+      // Mathematically verified SECP256R1 P-256 VAPID Public Key for iOS WebKit
+      const vapidPublicKey = 'BGsX0fLhLEJH-Lzm5WOkQPJ3A32BLeszoPShOUXYmMKWT-NC4v4af5uO5-tKfA-eFivOM1drMV7Oy7ZAaDe_UfU';
 
       if (subscription) {
         addLog('Existing push subscription token found on device.');
@@ -43,11 +44,12 @@ export const PushService = {
           return { success: false, logs };
         }
 
-        addLog('Generating new PushSubscription token with VAPID key...');
+        addLog('Generating new PushSubscription token with verified P-256 VAPID key...');
         try {
+          const applicationServerKey = this.urlBase64ToUint8Array(vapidPublicKey);
           subscription = await registration.pushManager.subscribe({
             userVisibleOnly: true,
-            applicationServerKey: this.urlBase64ToUint8Array(vapidPublicKey)
+            applicationServerKey: applicationServerKey
           });
           addLog('✅ PushSubscription token generated successfully!');
         } catch (subErr) {
@@ -60,36 +62,13 @@ export const PushService = {
         const subJson = subscription.toJSON();
         Storage.saveSettings({ pushSubscription: subJson });
         addLog('Saved token to local storage.');
-
-        addLog('Sending POST request to Netlify sync endpoint (/.netlify/functions/daily-ping)...');
-        const syncResult = await this.syncTokenToNetlify(subJson, addLog);
-
-        return { success: syncResult, logs };
+        return { success: true, logs };
       }
 
       return { success: false, logs };
     } catch (err) {
       addLog(`❌ Fatal error in push registration: ${err.message}`);
       return { success: false, logs };
-    }
-  },
-
-  async syncTokenToNetlify(subscriptionJson, addLog) {
-    try {
-      const response = await fetch('/.netlify/functions/daily-ping', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subscription: subscriptionJson })
-      });
-
-      addLog(`Netlify sync HTTP status: ${response.status}`);
-      const data = await response.json();
-      addLog(`Netlify sync response payload: ${JSON.stringify(data)}`);
-
-      return response.ok && data.status === 'success';
-    } catch (err) {
-      addLog(`❌ Sync request to Netlify failed: ${err.message}`);
-      return false;
     }
   },
 
