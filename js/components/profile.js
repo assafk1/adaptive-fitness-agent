@@ -1,4 +1,4 @@
-// User Profile & Onboarding Component with Morning Notification Time Picker
+// User Profile Component with Push Token Export for GitHub Actions
 
 import { Storage } from '../services/storage.js';
 
@@ -6,6 +6,7 @@ export const ProfileComponent = {
   renderModal(containerEl, profile, onSave) {
     const settings = Storage.getSettings();
     const morningPingTime = settings.morningPingTime || '08:00';
+    const tokenObj = settings.pushSubscription || null;
 
     const { name = 'Assaf', age = 30, heightCm = 178, weightKg = 75, fitnessLevel = 'Intermediate', equipment = [], sports = [] } = profile;
 
@@ -16,7 +17,7 @@ export const ProfileComponent = {
       <div class="modal-overlay" id="profile-modal">
         <div class="modal-card glassmorphism animate-fade-in">
           <div class="modal-header">
-            <h3>⚙️ Profile & Daily Push Notification Settings</h3>
+            <h3>⚙️ Profile & Push Notification Settings</h3>
             <button class="btn-icon" id="close-profile-btn">&times;</button>
           </div>
 
@@ -26,8 +27,9 @@ export const ProfileComponent = {
               <label class="form-label">⏰ Preferred Daily Push Notification Time</label>
               <input type="time" id="prof-ping-time" value="${morningPingTime}" class="custom-input" style="font-size: 16px; font-weight: bold; color: var(--accent-primary);" required />
               <span class="text-muted" style="font-size: 12px; margin-top: 4px; display: block;">
-                Your iPhone will send your daily morning check-in alert at this exact time every day.
+                Your iPhone receives morning check-in alerts at this time every day.
               </span>
+              ${tokenObj ? `<button type="button" class="btn btn-outline btn-sm" id="copy-token-btn" style="margin-top: 10px;">📋 Copy iPhone Push Token (for GitHub Secret)</button>` : ''}
             </div>
 
             <div class="form-row">
@@ -95,6 +97,14 @@ export const ProfileComponent = {
 
     const closeBtn = document.getElementById('close-profile-btn');
     const form = document.getElementById('profile-form');
+    const copyTokenBtn = document.getElementById('copy-token-btn');
+
+    if (copyTokenBtn) {
+      copyTokenBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(JSON.stringify(tokenObj));
+        alert('📋 iPhone Push Token copied to clipboard! Paste it into GitHub Secrets as IPHONE_PUSH_TOKEN.');
+      });
+    }
 
     closeBtn.addEventListener('click', () => containerEl.innerHTML = '');
 

@@ -13,7 +13,6 @@ webpush.setVapidDetails(
 
 console.log('⏰ Running GitHub Actions Daily Push Ping Script at:', new Date().toISOString());
 
-// Payload for iPhone Lock-screen Alert
 const payload = JSON.stringify({
   title: '🏃‍♂️ Adaptive Coach Morning Ping',
   body: "Good morning Assaf! How are you feeling today? Let's check in and align today's workout.",
@@ -22,4 +21,23 @@ const payload = JSON.stringify({
   tag: 'daily-ping-github-actions'
 });
 
-console.log('🎉 GitHub Actions Daily Push Workflow Ready!');
+async function run() {
+  const tokenEnv = process.env.IPHONE_PUSH_TOKEN;
+
+  if (!tokenEnv) {
+    console.warn('⚠️ No IPHONE_PUSH_TOKEN secret found in GitHub Secrets. Please add IPHONE_PUSH_TOKEN to GitHub Repository Secrets.');
+    return;
+  }
+
+  try {
+    const subscription = JSON.parse(tokenEnv);
+    console.log('📡 Dispatching WebPush payload via Apple APNs to endpoint:', subscription.endpoint);
+    const result = await webpush.sendNotification(subscription, payload);
+    console.log('🎉 Apple APNs Push Delivery Success! Response Status:', result.statusCode);
+  } catch (err) {
+    console.error('❌ Failed to deliver push notification via APNs:', err);
+    process.exit(1);
+  }
+}
+
+run();
