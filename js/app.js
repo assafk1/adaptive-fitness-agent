@@ -1,4 +1,4 @@
-// Main Application Controller with On-Screen Push Debug Logging
+// Main Application Controller with Push Notification Testing
 
 import { Storage } from './services/storage.js';
 import { FitnessEngine } from './services/fitnessEngine.js';
@@ -63,7 +63,7 @@ class AdaptiveCoachApp {
       text: greeting.text,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     });
-    this.quickChips = greeting.quickChips;
+    this.quickChips = [...greeting.quickChips, '🔔 Test Push Alert'];
 
     if (this.currentPlan) {
       this.messages.push({
@@ -84,22 +84,28 @@ class AdaptiveCoachApp {
 
     if (pingBtn) {
       pingBtn.addEventListener('click', async () => {
-        const result = await PushService.registerSubscription();
-        
-        // Display full debug log in chat
-        const logText = `🔔 **Push Registration Debug Log:**\n\n` + result.logs.map(l => `• ${l}`).join('\n');
-        this.messages.push({
-          sender: 'agent',
-          text: logText,
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        });
-        
-        NotificationManager.sendTestNotification();
-        this.renderActiveTab();
+        this.triggerTestPush();
       });
     }
 
     if (profileBtn) profileBtn.addEventListener('click', () => this.openProfileModal());
+  }
+
+  async triggerTestPush() {
+    const result = await PushService.registerSubscription();
+    const granted = await NotificationManager.requestPermission();
+
+    const logText = `🔔 **Push Notification Test Result:**\n\n` + 
+      (result.logs ? result.logs.map(l => `• ${l}`).join('\n') : '• Permission granted, triggering push alert...');
+    
+    this.messages.push({
+      sender: 'agent',
+      text: logText,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    });
+    
+    NotificationManager.sendTestNotification();
+    this.renderActiveTab();
   }
 
   initTabNavigation() {
@@ -140,6 +146,11 @@ class AdaptiveCoachApp {
   }
 
   async handleUserMessage(text) {
+    if (text.toLowerCase().includes('test push') || text.toLowerCase().includes('push test')) {
+      await this.triggerTestPush();
+      return;
+    }
+
     const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     this.messages.push({ sender: 'user', text, time: timeStr });
 
@@ -173,7 +184,9 @@ class AdaptiveCoachApp {
   }
 
   handleChipClick(chipText) {
-    if (chipText.includes('🔑 Set Gemini Key') || chipText.includes('Check Gemini Key')) {
+    if (chipText.includes('Test Push Alert') || chipText.includes('Push Ping')) {
+      this.triggerTestPush();
+    } else if (chipText.includes('🔑 Set Gemini Key') || chipText.includes('Check Gemini Key')) {
       this.openApiKeyModal();
     } else if (chipText.includes('Check-in') || chipText.includes('Start Daily')) {
       this.openCheckinModal();
