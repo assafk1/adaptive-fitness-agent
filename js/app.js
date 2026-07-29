@@ -1,4 +1,4 @@
-// Main Application Controller with Push Notification Testing
+// Main Application Controller - Mobile-First Architecture
 
 import { Storage } from './services/storage.js';
 import { FitnessEngine } from './services/fitnessEngine.js';
@@ -11,7 +11,6 @@ import { CheckInComponent } from './components/checkin.js';
 import { WorkoutComponent } from './components/workout.js';
 import { ProfileComponent } from './components/profile.js';
 import { DashboardComponent } from './components/dashboard.js';
-import { ApiKeyModalComponent } from './components/apiKeyModal.js';
 
 class AdaptiveCoachApp {
   constructor() {
@@ -36,7 +35,7 @@ class AdaptiveCoachApp {
 
   setupGlobalHandlers() {
     window.openGeminiKeyModal = () => {
-      this.openApiKeyModal();
+      this.openSettingsDrawer();
     };
   }
 
@@ -77,18 +76,10 @@ class AdaptiveCoachApp {
 
   initHeaderButtons() {
     const checkinBtn = document.getElementById('hdr-checkin-btn');
-    const pingBtn = document.getElementById('hdr-ping-btn');
-    const profileBtn = document.getElementById('hdr-profile-btn');
+    const settingsBtn = document.getElementById('hdr-settings-btn');
 
     if (checkinBtn) checkinBtn.addEventListener('click', () => this.openCheckinModal());
-
-    if (pingBtn) {
-      pingBtn.addEventListener('click', async () => {
-        this.triggerTestPush();
-      });
-    }
-
-    if (profileBtn) profileBtn.addEventListener('click', () => this.openProfileModal());
+    if (settingsBtn) settingsBtn.addEventListener('click', () => this.openSettingsDrawer());
   }
 
   async triggerTestPush() {
@@ -187,7 +178,7 @@ class AdaptiveCoachApp {
     if (chipText.includes('Test Push Alert') || chipText.includes('Push Ping')) {
       this.triggerTestPush();
     } else if (chipText.includes('🔑 Set Gemini Key') || chipText.includes('Check Gemini Key')) {
-      this.openApiKeyModal();
+      this.openSettingsDrawer();
     } else if (chipText.includes('Check-in') || chipText.includes('Start Daily')) {
       this.openCheckinModal();
     } else if (chipText.includes('Show today\'s plan')) {
@@ -210,24 +201,12 @@ class AdaptiveCoachApp {
     });
   }
 
-  openApiKeyModal() {
-    const modalContainer = document.getElementById('modal-container');
-    ApiKeyModalComponent.renderModal(modalContainer, (newKey, selectedModel) => {
-      this.messages.push({
-        sender: 'agent',
-        text: `🔑 **Gemini AI Connected!** Model **${selectedModel}** is active. Feel free to talk to me about any adjustments, soreness, or workout goals!`,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      });
-      this.renderActiveTab();
-    });
-  }
-
-  openProfileModal() {
+  openSettingsDrawer() {
     this.profile = Storage.getProfile();
     const modalContainer = document.getElementById('modal-container');
     ProfileComponent.renderModal(modalContainer, this.profile, (updatedProfile) => {
       this.profile = Storage.saveProfile(updatedProfile);
-      alert('⚙️ Profile & equipment updated!');
+      alert('⚙️ All settings & profile saved!');
       this.renderActiveTab();
     });
   }
