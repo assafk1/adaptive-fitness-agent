@@ -21,4 +21,6 @@ jobs:
         run: npm install web-push
 
       - name: Execute Daily Push Script
+        env:
+          IPHONE_PUSH_TOKEN: ${{ secrets.IPHONE_PUSH_TOKEN }}
         run: node scripts/daily-ping.js
