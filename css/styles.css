@@ -76,7 +76,7 @@ body {
   width: 100%;
   max-width: 768px;
   margin: 0 auto;
-  padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px)); /* Space for bottom nav & safe area */
+  padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px)); /* Space for bottom nav */
 }
 
 /* Sleek 1-Line Mobile Header with iOS Safe Area Inset Top */
@@ -87,8 +87,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-top: calc(14px + env(safe-area-inset-top, 24px)); /* Pushes header below Dynamic Island / Notch */
-  padding-bottom: 12px;
+  padding-top: calc(12px + env(safe-area-inset-top, 20px));
+  padding-bottom: 10px;
   padding-left: calc(16px + env(safe-area-inset-left, 0px));
   padding-right: calc(16px + env(safe-area-inset-right, 0px));
   border-radius: 0;
@@ -134,7 +134,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 10px 16px;
+  padding: 8px 14px;
   font-size: 14px;
   font-weight: 600;
   font-family: inherit;
@@ -143,7 +143,7 @@ body {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   border: none;
   touch-action: manipulation;
-  min-height: 40px;
+  min-height: 38px;
 }
 
 .btn-primary {
@@ -170,13 +170,13 @@ body {
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid var(--border-glass-bright);
   color: var(--text-primary);
-  width: 42px;
-  height: 42px;
+  width: 38px;
+  height: 38px;
   border-radius: var(--radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  font-size: 18px;
   cursor: pointer;
   flex-shrink: 0;
 }
@@ -184,7 +184,7 @@ body {
 .btn-sm {
   padding: 6px 12px;
   font-size: 13px;
-  min-height: 36px;
+  min-height: 34px;
 }
 
 .btn-block {
@@ -194,10 +194,10 @@ body {
 .btn-lg {
   padding: 14px 20px;
   font-size: 16px;
-  min-height: 50px;
+  min-height: 48px;
 }
 
-/* Bottom Navigation Bar with iOS Safe Area Inset */
+/* Compact Bottom Navigation Bar */
 .app-nav {
   position: fixed;
   bottom: 0;
@@ -206,8 +206,11 @@ body {
   z-index: 90;
   display: flex;
   justify-content: space-around;
-  padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 16px)) 12px;
-  background: rgba(15, 23, 42, 0.94);
+  padding-top: 6px;
+  padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+  padding-left: 12px;
+  padding-right: 12px;
+  background: rgba(15, 23, 42, 0.95);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid var(--border-glass);
@@ -221,8 +224,8 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
-  padding: 8px 0;
+  gap: 2px;
+  padding: 6px 0;
   background: transparent;
   border: none;
   color: var(--text-secondary);
@@ -235,7 +238,7 @@ body {
 }
 
 .tab-btn .nav-icon {
-  font-size: 20px;
+  font-size: 18px;
 }
 
 .tab-btn.active {
@@ -245,16 +248,16 @@ body {
 
 /* Main View Content */
 .main-content {
-  padding: 16px;
+  padding: 12px;
   flex: 1;
 }
 
-/* Chat Feed UI */
+/* Chat Feed UI & Input Bar Fix */
 .chat-wrapper {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 180px);
-  max-height: 700px;
+  height: calc(100vh - 130px - env(safe-area-inset-top, 20px) - env(safe-area-inset-bottom, 0px));
+  max-height: 750px;
   padding: 12px;
 }
 
@@ -320,7 +323,7 @@ body {
   gap: 8px;
   overflow-x: auto;
   padding: 8px 0;
-  margin-top: 8px;
+  margin-top: 6px;
   scrollbar-width: none;
 }
 
@@ -329,12 +332,12 @@ body {
 }
 
 .chip-action {
-  padding: 8px 14px;
+  padding: 6px 12px;
   background: rgba(255, 255, 255, 0.07);
   border: 1px solid var(--border-glass-bright);
   border-radius: var(--radius-full);
   color: var(--text-primary);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   white-space: nowrap;
   cursor: pointer;
@@ -349,13 +352,14 @@ body {
 .chat-input-bar {
   display: flex;
   gap: 8px;
-  margin-top: 10px;
+  margin-top: 8px;
+  padding-top: 4px;
 }
 
 .chat-input-bar input {
   flex: 1;
-  padding: 12px 14px;
-  background: rgba(15, 23, 42, 0.7);
+  padding: 10px 14px;
+  background: rgba(15, 23, 42, 0.8);
   border: 1px solid var(--border-glass-bright);
   border-radius: var(--radius-md);
   color: var(--text-primary);
@@ -370,18 +374,18 @@ body {
 
 /* Workout Card */
 .workout-card {
-  padding: 20px;
+  padding: 16px;
 }
 
 .workout-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .workout-title-group h3 {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
   margin-top: 4px;
 }
@@ -420,7 +424,7 @@ body {
   padding: 10px 14px;
   background: rgba(255, 255, 255, 0.04);
   border-radius: var(--radius-sm);
-  margin-bottom: 16px;
+  margin-bottom: 14px;
   font-size: 13px;
 }
 
@@ -431,17 +435,17 @@ body {
   background: rgba(99, 102, 241, 0.12);
   border: 1px solid rgba(99, 102, 241, 0.3);
   border-radius: var(--radius-sm);
-  margin-bottom: 16px;
+  margin-bottom: 14px;
   font-size: 13px;
   line-height: 1.4;
 }
 
 .routine-block {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .routine-block h4 {
-  font-size: 16px;
+  font-size: 15px;
   color: var(--text-primary);
   margin-bottom: 6px;
 }
@@ -450,13 +454,13 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 0;
+  padding: 10px 0;
   border-bottom: 1px solid var(--border-glass);
 }
 
 .exercise-name {
   font-weight: 600;
-  font-size: 15px;
+  font-size: 14px;
   display: block;
 }
 
@@ -528,7 +532,7 @@ body {
   max-width: 540px;
   max-height: 85vh;
   overflow-y: auto;
-  padding: 24px;
+  padding: 20px;
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
   animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -549,7 +553,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .modal-header h3 {
@@ -558,12 +562,12 @@ body {
 }
 
 .settings-section-title {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--accent-primary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin: 20px 0 10px 0;
+  margin: 16px 0 8px 0;
   padding-bottom: 4px;
   border-bottom: 1px solid var(--border-glass);
 }
