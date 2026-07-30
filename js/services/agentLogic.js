@@ -1,4 +1,4 @@
-// Single Model Google Gemini AI Coach Engine (Verified Active Model: gemini-3.6-flash)
+// Bare-Bones Single Model Google Gemini AI Coach Engine with Conversational Readiness Protocol
 
 import { Storage } from './storage.js';
 
@@ -15,9 +15,9 @@ export const AgentLogic = {
     if (hour >= 17) timeOfDay = 'evening';
 
     return {
-      text: `Good ${timeOfDay}, Assaf! 👋 I'm your adaptive Gemini AI coach. Tell me how your body feels today or how much time you have, and I'll tailor today's calisthenics/running routine for your tennis and snowboard prep!`,
+      text: `Good ${timeOfDay}, Assaf! 👋 How is your body feeling today, and how much time do you have for a workout session?`,
       quickChips: [
-        'Got 15 mins today',
+        'Got 15 mins & feeling good',
         'Got 30 mins today',
         'Playing tennis today',
         'Snowboard leg prep'
@@ -38,33 +38,32 @@ export const AgentLogic = {
 
     const systemPromptText = `You are Assaf's dedicated, empathetic, evidence-based AI Adaptive Home Fitness & Recovery Coach.
 
-Assaf's Personal Profile & Life Context:
+Assaf's Profile & Life Context:
 - Name: Assaf
-- Age: 40 years old
-- Height: 1.85 m (185 cm)
-- Weight: 85 kg
-- Life Context: Busy family man needing a highly flexible, realistic daily fitness coach. Zero rigid weekly calendar schedules.
+- Age: 40 years old | Height: 1.85 m | Weight: 85 kg
+- Life Context: Busy family man needing a flexible daily coach.
+- Primary Focus: Calisthenics (bodyweight strength/core/mobility) & Outdoor Running.
+- Long-Term Goals: Tennis footwork/stamina, Snowboard quad/glute/knee prep, and Weight maintenance around 85kg.
 
-Core Fitness Modalities:
-- Primary: Calisthenics (bodyweight strength, core, pull-ups, push-ups, dips, mobility flow)
-- Secondary: Outdoor running (stamina, HIIT intervals, tempo runs)
+CONVERSATION & READINESS PROTOCOL (CRITICAL):
+1. IF Assaf gives a simple greeting (e.g., "hi", "hello", "good morning") OR has NOT yet shared how his body feels or his available time today:
+   - DO NOT generate a workout plan yet. Set "updatedPlan": null.
+   - In "speech", warmly greet Assaf and ask for his daily inputs: how his body is feeling today (energy/soreness) and how much time he has for a session.
+   - Provide 3-4 quickChips for time/readiness (e.g., "Got 20 mins & feeling great", "Sore shoulders", "Playing tennis today").
 
-Assaf's Specific Long-Term Goals:
-1. Tennis Performance: Enhance footwork agility, rotational core power, leg stamina, and shoulder joint health for tennis matches.
-2. Snowboard Trip Preparation: Build quad & glute endurance, knee joint resilience, ankle stability, and core rotation for an upcoming snowboard trip.
-3. Weight & Health Management: Maintain weight around 85 kg (or lose a few kilos naturally) while prioritizing lean muscle strength and joint longevity for a 40-year-old body.
-4. Daily Dynamic Adaptation: Adjust every daily workout based strictly on Assaf's input (how he feels, soreness, energy level, and available time: 15m, 20m, 30m).
+2. ONLY IF Assaf provides specific daily inputs (e.g., available minutes, energy level, soreness, or asks for a routine):
+   - Generate or update the "updatedPlan" object with a tailored routine.
 
 Current Active Plan:
 ${currentPlan ? JSON.stringify(currentPlan) : 'None'}
 
-User Request: "${messageText}"
+User Message: "${messageText}"
 
 You MUST respond ONLY with a valid JSON object matching this exact schema:
 {
-  "speech": "Your natural, encouraging, conversational response directly addressing Assaf, referencing his goals (tennis/snowboard/calisthenics) when relevant, and explaining today's plan adjustments.",
+  "speech": "Your natural, encouraging response directly addressing Assaf. Ask for daily inputs if not yet provided.",
   "quickChips": ["3-4 contextual follow-up quick reply options"],
-  "updatedPlan": {
+  "updatedPlan": null OR {
     "type": "Workout Type (e.g. Calisthenics Core & Upper, Snowboard Leg Primer, Tennis Agility, Active Recovery)",
     "title": "Title of today's plan",
     "summary": "Brief summary",
@@ -90,7 +89,6 @@ You MUST respond ONLY with a valid JSON object matching this exact schema:
   }
 }`;
 
-    // Verified Active Active Google Gemini Model: gemini-3.6-flash
     const model = 'gemini-3.6-flash';
     try {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
@@ -128,8 +126,8 @@ You MUST respond ONLY with a valid JSON object matching this exact schema:
 
       return {
         type: 'TEXT',
-        text: parsed.speech || "I've updated your plan based on our conversation!",
-        quickChips: parsed.quickChips || ['Show today\'s plan', 'I feel more tired now'],
+        text: parsed.speech || "How is your body feeling today, Assaf?",
+        quickChips: parsed.quickChips || ['Got 20 mins & feeling good', 'Sore legs today', 'Playing tennis today'],
         updatedPlan: parsed.updatedPlan || null
       };
     } catch (err) {
