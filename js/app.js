@@ -204,9 +204,10 @@ class AdaptiveCoachApp {
   openSettingsDrawer() {
     this.profile = Storage.getProfile();
     const modalContainer = document.getElementById('modal-container');
-    ProfileComponent.renderModal(modalContainer, this.profile, (updatedProfile) => {
+    ProfileComponent.renderModal(modalContainer, this.profile, (updatedProfile, selectedModel) => {
       this.profile = Storage.saveProfile(updatedProfile);
-      alert('⚙️ All settings & profile saved!');
+      const activeModel = selectedModel || AgentLogic.getSelectedModel();
+      alert(`⚙️ Settings saved! Active AI Model set to: ${activeModel}`);
       this.renderActiveTab();
     });
   }

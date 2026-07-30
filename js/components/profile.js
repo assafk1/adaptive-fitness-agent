@@ -1,4 +1,4 @@
-// Unified Settings & Profile Bottom Sheet Component for Mobile-First PWA
+// Unified Settings & Profile Bottom Sheet Component with Reliable Model Selection
 
 import { Storage } from '../services/storage.js';
 import { AgentLogic } from '../services/agentLogic.js';
@@ -9,7 +9,7 @@ export const ProfileComponent = {
   async renderModal(containerEl, profile, onSave) {
     const settings = Storage.getSettings();
     const currentKey = settings.apiKey || '';
-    const currentModel = settings.selectedModel || 'gemini-2.0-flash';
+    let chosenModel = settings.selectedModel || 'gemini-2.0-flash';
     const morningPingTime = settings.morningPingTime || '08:00';
 
     const { name = 'Assaf', age = 30, heightCm = 178, weightKg = 75, fitnessLevel = 'Intermediate', equipment = [], sports = [] } = profile;
@@ -39,7 +39,7 @@ export const ProfileComponent = {
             <div class="form-group">
               <label class="form-label">Active Gemini AI Model (via ListModels API)</label>
               <select id="gemini-model-select" class="custom-select">
-                <option value="${currentModel}" selected>Loading available models...</option>
+                <option value="${chosenModel}" selected>${chosenModel}</option>
               </select>
             </div>
 
@@ -133,21 +133,26 @@ export const ProfileComponent = {
     const copyTokenBtn = document.getElementById('copy-token-btn');
     const forceReloadBtn = document.getElementById('force-reload-btn');
 
-    // Load available models via ListModels API
+    // Track chosen model
+    modelSelect.addEventListener('change', (e) => {
+      if (e.target.value) {
+        chosenModel = e.target.value;
+      }
+    });
+
+    // Populate dropdown dynamically via ModelService.ListModels
     const loadModels = async (key) => {
       if (!key) return;
-      modelSelect.innerHTML = `<option value="">Querying ModelService.ListModels...</option>`;
       const models = await AgentLogic.fetchAvailableModels(key);
 
       if (models.length === 0) {
-        modelSelect.innerHTML = `
-          <option value="gemini-2.0-flash" ${currentModel === 'gemini-2.0-flash' ? 'selected' : ''}>gemini-2.0-flash (Recommended)</option>
-          <option value="gemini-1.5-flash-latest" ${currentModel === 'gemini-1.5-flash-latest' ? 'selected' : ''}>gemini-1.5-flash-latest</option>
-          <option value="gemini-1.5-pro-latest" ${currentModel === 'gemini-1.5-pro-latest' ? 'selected' : ''}>gemini-1.5-pro-latest</option>
-        `;
+        const fallbackList = ['gemini-2.0-flash', 'gemini-1.5-flash-latest', 'gemini-1.5-pro-latest'];
+        modelSelect.innerHTML = fallbackList.map(m => `
+          <option value="${m}" ${m === chosenModel ? 'selected' : ''}>${m}</option>
+        `).join('');
       } else {
         modelSelect.innerHTML = models.map(m => `
-          <option value="${m.id}" ${m.id === currentModel ? 'selected' : ''}>
+          <option value="${m.id}" ${m.id === chosenModel ? 'selected' : ''}>
             ${m.id} — ${m.displayName}
           </option>
         `).join('');
@@ -203,7 +208,7 @@ export const ProfileComponent = {
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       const keyVal = keyInput.value.trim();
-      const selectedModelVal = modelSelect.value || 'gemini-2.0-flash';
+      const selectedModelVal = modelSelect.value || chosenModel || 'gemini-2.0-flash';
       const pingTimeVal = document.getElementById('prof-ping-time').value;
 
       Storage.saveSettings({ 
@@ -224,7 +229,7 @@ export const ProfileComponent = {
       };
 
       containerEl.innerHTML = '';
-      onSave(updatedProfile);
+      onSave(updatedProfile, selectedModelVal);
     });
   }
 };
