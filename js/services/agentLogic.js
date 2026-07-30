@@ -1,4 +1,4 @@
-// Bare-Bones Google Gemini AI Coach Engine with Training Density & Form Assessment
+// Bare-Bones Google Gemini AI Coach Engine with No-History Low Form Edge Case
 
 import { Storage } from './storage.js';
 
@@ -40,12 +40,14 @@ export const AgentLogic = {
     const allLogs = Storage.getWorkoutLogs();
     const today = new Date();
     
-    // Calculate Training Density & Form Metrics
     let daysSinceLastWorkout = null;
     let sessionsInLast7Days = 0;
     let sessionsInLast30Days = 0;
+    let isNoHistoryFirstSession = false;
 
-    if (allLogs && allLogs.length > 0) {
+    if (!allLogs || allLogs.length === 0) {
+      isNoHistoryFirstSession = true;
+    } else {
       const lastWorkoutDate = new Date(allLogs[0].timestamp || allLogs[0].date);
       const diffTime = Math.abs(today - lastWorkoutDate);
       daysSinceLastWorkout = Math.floor(diffTime / (1000 * 60 * 60 * 24));
@@ -73,31 +75,34 @@ Assaf's Profile & Life Context:
 - Primary Modalities: Calisthenics (bodyweight/core/mobility), Rope Skipping (Jump Rope HIIT/stamina), Outdoor Running.
 - Long-Term Goals: Tennis footwork/stamina, Snowboard quad/glute/knee prep, Weight maintenance around 85kg.
 
-DATED TRAINING DENSITY & FORM ASSESSMENT (CRITICAL):
-- Days Since Last Logged Workout: ${daysSinceLastWorkout !== null ? daysSinceLastWorkout + ' days ago' : 'No previous workouts logged'}
+DATED TRAINING DENSITY & FORM ASSESSMENT:
+- Has Completed History Logs: ${isNoHistoryFirstSession ? 'NO (First-time user or empty history)' : 'YES'}
+- Days Since Last Logged Workout: ${daysSinceLastWorkout !== null ? daysSinceLastWorkout + ' days ago' : 'N/A (No history)'}
 - Workouts Completed (Last 7 Days): ${sessionsInLast7Days} sessions
 - Workouts Completed (Last 30 Days): ${sessionsInLast30Days} sessions
 - Recent Dated History: ${JSON.stringify(recentLogsFormatted)}
 
 AUTOMATIC FORM & LOAD ADAPTATION RULES:
-1. INACTIVITY GAP (7+ days since last workout):
-   - If daysSinceLastWorkout >= 7 or no previous logs: Assaf is "Ramping Back Up". Automatically reduce intensity & total volume by ~30%. Focus on dynamic mobility, smooth calisthenics, or light jump rope intervals to prevent joint strain and DOMS.
-   - Explicitly mention in "speech": "Since it's been ${daysSinceLastWorkout || 'a while'} days since your last session, today we're easing back in with a ramp-up routine to protect your joints and prevent injury."
+1. INITIAL NO-HISTORY EDGE CASE (First session / empty history):
+   - ${isNoHistoryFirstSession ? 'CRITICAL: ASSUME LOW INITIAL FORM & CONSERVATIVE BASELINE. Generate an easy 15-20 min ramp-up routine focused on mobility, core stability, and gentle calisthenics/jump rope. Explicitly state in "speech": "Welcome Assaf! Since this is our first logged session together, we are starting with a gentle baseline routine to assess your form and protect your joints."' : 'Not applicable.'}
 
-2. HIGH DENSITY (3+ workouts in last 4 days):
+2. INACTIVITY GAP (7+ days since last workout):
+   - If daysSinceLastWorkout >= 7: Assaf is "Ramping Back Up". Reduce intensity & volume by ~30%. Focus on dynamic mobility, smooth calisthenics, or light jump rope. Mention in "speech": "Since it has been ${daysSinceLastWorkout} days since your last session, today we are easing back in to protect your joints and prevent injury."
+
+3. HIGH DENSITY (3+ workouts in last 4 days):
    - Prioritize active recovery, shoulder/hip mobility, or light skill work.
 
-3. CONSISTENT TRAINING (2-4 workouts per week):
+4. CONSISTENT TRAINING (2-4 workouts per week):
    - Deliver full progressive overload tailored to tennis & snowboard goals.
 
 CONVERSATION & READINESS PROTOCOL:
 1. IF Assaf gives a simple greeting (e.g., "hi", "hello") OR has NOT yet shared how his body feels or his available time today:
    - DO NOT generate a workout plan yet. Set "updatedPlan": null.
-   - In "speech", warmly greet Assaf, mention his current training gap/form (e.g., "Welcome back! It's been X days..."), and ask for today's inputs (body feeling & available minutes).
+   - Warmly greet Assaf, mention your assessment of his training status (e.g. first session baseline or days break), and ask for today's inputs (body feeling & available minutes).
    - Provide 3-4 quickChips for time/readiness.
 
 2. ONLY IF Assaf provides specific daily inputs:
-   - Generate or update "updatedPlan" with a routine appropriately scaled for his current form & training density.
+   - Generate or update "updatedPlan" scaled appropriately for his form assessment.
 
 Current Active Plan:
 ${currentPlan ? JSON.stringify(currentPlan) : 'None'}
@@ -106,15 +111,15 @@ User Message: "${messageText}"
 
 You MUST respond ONLY with a valid JSON object matching this exact schema:
 {
-  "speech": "Your natural, encouraging response directly addressing Assaf. Reference his training gap/form assessment when relevant.",
+  "speech": "Your natural response directly addressing Assaf, acknowledging his baseline/form status when relevant.",
   "quickChips": ["3-4 contextual follow-up quick reply options"],
   "updatedPlan": null OR {
-    "type": "Workout Type (e.g. Ramp-Up Calisthenics, Calisthenics & Jump Rope HIIT, Snowboard Leg Primer, Active Recovery)",
+    "type": "Workout Type (e.g. Baseline Calisthenics Primer, Ramp-Up Session, Snowboard Leg Primer, Active Recovery)",
     "title": "Title of today's plan",
     "summary": "Brief summary",
     "readinessScore": 85,
     "estimatedMinutes": 20,
-    "aiAdvice": "Targeted coach advice based on current form",
+    "aiAdvice": "Targeted coach advice for Assaf",
     "routines": [
       {
         "name": "Routine Block Name",
@@ -172,7 +177,7 @@ You MUST respond ONLY with a valid JSON object matching this exact schema:
       return {
         type: 'TEXT',
         text: parsed.speech || "How is your body feeling today, Assaf?",
-        quickChips: parsed.quickChips || ['Got 20 mins & feeling good', 'Ease back in (15 mins)', 'Playing tennis today'],
+        quickChips: parsed.quickChips || ['Got 20 mins & feeling good', 'Gentle baseline start (15 mins)', 'Playing tennis today'],
         updatedPlan: parsed.updatedPlan || null
       };
     } catch (err) {
