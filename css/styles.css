@@ -76,10 +76,10 @@ body {
   width: 100%;
   max-width: 768px;
   margin: 0 auto;
-  padding-bottom: 84px; /* Space for bottom nav */
+  padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px)); /* Space for bottom nav & safe area */
 }
 
-/* Sleek 1-Line Mobile Header */
+/* Sleek 1-Line Mobile Header with iOS Safe Area Inset Top */
 .app-header {
   position: sticky;
   top: 0;
@@ -87,12 +87,15 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
+  padding-top: calc(14px + env(safe-area-inset-top, 24px)); /* Pushes header below Dynamic Island / Notch */
+  padding-bottom: 12px;
+  padding-left: calc(16px + env(safe-area-inset-left, 0px));
+  padding-right: calc(16px + env(safe-area-inset-right, 0px));
   border-radius: 0;
   border-bottom: 1px solid var(--border-glass);
-  background: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 .header-brand {
@@ -167,13 +170,13 @@ body {
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid var(--border-glass-bright);
   color: var(--text-primary);
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   border-radius: var(--radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: 20px;
   cursor: pointer;
   flex-shrink: 0;
 }
@@ -181,7 +184,7 @@ body {
 .btn-sm {
   padding: 6px 12px;
   font-size: 13px;
-  min-height: 34px;
+  min-height: 36px;
 }
 
 .btn-block {
@@ -194,7 +197,7 @@ body {
   min-height: 50px;
 }
 
-/* Bottom Navigation Bar */
+/* Bottom Navigation Bar with iOS Safe Area Inset */
 .app-nav {
   position: fixed;
   bottom: 0;
@@ -203,8 +206,8 @@ body {
   z-index: 90;
   display: flex;
   justify-content: space-around;
-  padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px)) 12px;
-  background: rgba(15, 23, 42, 0.92);
+  padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 16px)) 12px;
+  background: rgba(15, 23, 42, 0.94);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid var(--border-glass);
@@ -250,7 +253,7 @@ body {
 .chat-wrapper {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 160px);
+  height: calc(100vh - 180px);
   max-height: 700px;
   padding: 12px;
 }
@@ -509,7 +512,7 @@ body {
   -webkit-backdrop-filter: blur(12px);
   z-index: 1000;
   display: flex;
-  align-items: flex-end; /* Bottom sheet on mobile */
+  align-items: flex-end;
   justify-content: center;
 }
 
@@ -552,62 +555,6 @@ body {
 .modal-header h3 {
   font-size: 18px;
   font-weight: 700;
-}
-
-.form-group {
-  margin-bottom: 16px;
-}
-
-.form-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  margin-bottom: 6px;
-  display: block;
-}
-
-.custom-input, .custom-select {
-  width: 100%;
-  padding: 12px 14px;
-  background: rgba(15, 23, 42, 0.7);
-  border: 1px solid var(--border-glass-bright);
-  border-radius: var(--radius-sm);
-  color: var(--text-primary);
-  font-family: inherit;
-  font-size: 14px;
-}
-
-.form-row {
-  display: flex;
-  gap: 12px;
-}
-
-.col-6 {
-  flex: 1;
-}
-
-.tag-chips-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.checkbox-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border-glass);
-  border-radius: var(--radius-full);
-  font-size: 13px;
-  cursor: pointer;
-}
-
-.checkbox-tag:has(input:checked) {
-  background: rgba(16, 185, 129, 0.2);
-  border-color: var(--accent-primary);
-  color: var(--accent-primary);
 }
 
 .settings-section-title {
