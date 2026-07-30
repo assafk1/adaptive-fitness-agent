@@ -1,4 +1,4 @@
-// Bare-Bones Google Gemini AI Coach Engine with Gemini 1.5 Active Models
+// Bare-Bones Single Model Google Gemini AI Coach Engine
 
 import { Storage } from './storage.js';
 
@@ -90,61 +90,55 @@ You MUST respond ONLY with a valid JSON object matching this exact schema:
   }
 }`;
 
-    // Active Stable Production Gemini Models
-    const models = ['gemini-1.5-flash', 'gemini-1.5-flash-latest', 'gemini-1.5-pro', 'gemini-1.5-pro-latest'];
-    let lastError = null;
+    // Single Model: gemini-1.5-flash
+    const model = 'gemini-1.5-flash';
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
-    for (const model of models) {
-      try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-
-        const payload = {
-          system_instruction: {
-            parts: [{ text: systemPromptText }]
-          },
-          contents: [
-            {
-              role: 'user',
-              parts: [{ text: messageText }]
-            }
-          ],
-          generationConfig: {
-            response_mime_type: 'application/json'
+      const payload = {
+        system_instruction: {
+          parts: [{ text: systemPromptText }]
+        },
+        contents: [
+          {
+            role: 'user',
+            parts: [{ text: messageText }]
           }
-        };
-
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error?.message || `API Error ${response.status}`);
+        ],
+        generationConfig: {
+          response_mime_type: 'application/json'
         }
+      };
 
-        const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-        const jsonText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
-        const parsed = JSON.parse(jsonText);
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
 
-        return {
-          type: 'TEXT',
-          text: parsed.speech || "I've updated your plan based on our conversation!",
-          quickChips: parsed.quickChips || ['Show today\'s plan', 'I feel more tired now'],
-          updatedPlan: parsed.updatedPlan || null
-        };
-      } catch (err) {
-        console.warn(`Model ${model} call failed:`, err.message);
-        lastError = err;
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error?.message || `API Error ${response.status}`);
       }
-    }
 
-    return {
-      type: 'TEXT',
-      text: `⚠️ **Gemini AI Error**: ${lastError?.message || 'Failed to connect to Gemini'}. Please check your API key by tapping 🔑 Key in the header.`,
-      quickChips: ['🔑 Check Gemini Key']
-    };
+      const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      const jsonText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+      const parsed = JSON.parse(jsonText);
+
+      return {
+        type: 'TEXT',
+        text: parsed.speech || "I've updated your plan based on our conversation!",
+        quickChips: parsed.quickChips || ['Show today\'s plan', 'I feel more tired now'],
+        updatedPlan: parsed.updatedPlan || null
+      };
+    } catch (err) {
+      console.warn(`Model ${model} call failed:`, err.message);
+      return {
+        type: 'TEXT',
+        text: `⚠️ **Gemini AI Error**: ${err.message}. Please check your API key by tapping 🔑 Key in the header.`,
+        quickChips: ['🔑 Check Gemini Key']
+      };
+    }
   }
 };
