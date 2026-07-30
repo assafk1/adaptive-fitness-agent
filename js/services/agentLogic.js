@@ -1,4 +1,4 @@
-// Bare-Bones Single Model Google Gemini AI Coach Engine
+// Single Model Google Gemini AI Coach Engine (Verified Active Model: gemini-3.6-flash)
 
 import { Storage } from './storage.js';
 
@@ -90,8 +90,8 @@ You MUST respond ONLY with a valid JSON object matching this exact schema:
   }
 }`;
 
-    // Single Model: gemini-1.5-flash
-    const model = 'gemini-1.5-flash';
+    // Verified Active Active Google Gemini Model: gemini-3.6-flash
+    const model = 'gemini-3.6-flash';
     try {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
