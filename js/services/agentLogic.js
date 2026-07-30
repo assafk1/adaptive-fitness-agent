@@ -1,4 +1,4 @@
-// Bare-Bones Single Model Google Gemini AI Coach Engine with Workout History & Rope Skipping
+// Bare-Bones Google Gemini AI Coach Engine with Training Density & Form Assessment
 
 import { Storage } from './storage.js';
 
@@ -36,8 +36,33 @@ export const AgentLogic = {
       };
     }
 
-    // Fetch recent completed workout logs (last 5 sessions) for intelligent routine diversification
-    const recentLogs = Storage.getWorkoutLogs().slice(0, 5);
+    // Fetch all completed workout logs
+    const allLogs = Storage.getWorkoutLogs();
+    const today = new Date();
+    
+    // Calculate Training Density & Form Metrics
+    let daysSinceLastWorkout = null;
+    let sessionsInLast7Days = 0;
+    let sessionsInLast30Days = 0;
+
+    if (allLogs && allLogs.length > 0) {
+      const lastWorkoutDate = new Date(allLogs[0].timestamp || allLogs[0].date);
+      const diffTime = Math.abs(today - lastWorkoutDate);
+      daysSinceLastWorkout = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+      const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+      sessionsInLast7Days = allLogs.filter(l => new Date(l.timestamp || l.date) >= sevenDaysAgo).length;
+      sessionsInLast30Days = allLogs.filter(l => new Date(l.timestamp || l.date) >= thirtyDaysAgo).length;
+    }
+
+    const recentLogsFormatted = allLogs.slice(0, 7).map(l => ({
+      date: l.date,
+      title: l.title,
+      type: l.type,
+      durationMin: l.durationMin || l.estimatedMinutes || 15
+    }));
 
     const systemPromptText = `You are Assaf's dedicated, empathetic, evidence-based AI Adaptive Home Fitness & Recovery Coach.
 
@@ -45,30 +70,34 @@ Assaf's Profile & Life Context:
 - Name: Assaf
 - Age: 40 years old | Height: 1.85 m | Weight: 85 kg
 - Life Context: Busy family man needing a flexible daily coach.
-- Primary Fitness Modalities: 
-  1. Calisthenics (bodyweight strength, core, pull-ups, push-ups, dips, mobility)
-  2. Rope Skipping (Jump Rope HIIT, footwork stamina, calf/ankle resilience)
-  3. Outdoor Running (endurance, tempo runs)
+- Primary Modalities: Calisthenics (bodyweight/core/mobility), Rope Skipping (Jump Rope HIIT/stamina), Outdoor Running.
+- Long-Term Goals: Tennis footwork/stamina, Snowboard quad/glute/knee prep, Weight maintenance around 85kg.
 
-Assaf's Long-Term Goals:
-1. Tennis Performance: Enhance footwork agility, rotational core power, leg stamina, and shoulder joint health.
-2. Snowboard Trip Prep: Build quad & glute endurance, knee joint resilience, ankle stability, and core rotation for an upcoming snowboard trip.
-3. Weight & Health Management: Maintain weight around 85kg with lean muscle preservation.
+DATED TRAINING DENSITY & FORM ASSESSMENT (CRITICAL):
+- Days Since Last Logged Workout: ${daysSinceLastWorkout !== null ? daysSinceLastWorkout + ' days ago' : 'No previous workouts logged'}
+- Workouts Completed (Last 7 Days): ${sessionsInLast7Days} sessions
+- Workouts Completed (Last 30 Days): ${sessionsInLast30Days} sessions
+- Recent Dated History: ${JSON.stringify(recentLogsFormatted)}
 
-ROUTINE DIVERSITY & RECENT WORKOUT HISTORY:
-Assaf's Last 5 Completed Sessions:
-${recentLogs.length > 0 ? JSON.stringify(recentLogs.map(l => ({ date: l.date, title: l.title, type: l.type }))) : 'No recent sessions logged yet.'}
+AUTOMATIC FORM & LOAD ADAPTATION RULES:
+1. INACTIVITY GAP (7+ days since last workout):
+   - If daysSinceLastWorkout >= 7 or no previous logs: Assaf is "Ramping Back Up". Automatically reduce intensity & total volume by ~30%. Focus on dynamic mobility, smooth calisthenics, or light jump rope intervals to prevent joint strain and DOMS.
+   - Explicitly mention in "speech": "Since it's been ${daysSinceLastWorkout || 'a while'} days since your last session, today we're easing back in with a ramp-up routine to protect your joints and prevent injury."
 
-Use this workout history to DIVERSIFY today's training! Avoid repeating the exact same routine blocks or muscle groups from yesterday. Balance Calisthenics, Rope Skipping, and Mobility across the week.
+2. HIGH DENSITY (3+ workouts in last 4 days):
+   - Prioritize active recovery, shoulder/hip mobility, or light skill work.
+
+3. CONSISTENT TRAINING (2-4 workouts per week):
+   - Deliver full progressive overload tailored to tennis & snowboard goals.
 
 CONVERSATION & READINESS PROTOCOL:
-1. IF Assaf gives a simple greeting (e.g., "hi", "hello", "good morning") OR has NOT yet shared how his body feels or his available time today:
+1. IF Assaf gives a simple greeting (e.g., "hi", "hello") OR has NOT yet shared how his body feels or his available time today:
    - DO NOT generate a workout plan yet. Set "updatedPlan": null.
-   - In "speech", warmly greet Assaf and ask for his daily inputs: how his body is feeling today (energy/soreness) and how much time he has for a session.
+   - In "speech", warmly greet Assaf, mention his current training gap/form (e.g., "Welcome back! It's been X days..."), and ask for today's inputs (body feeling & available minutes).
    - Provide 3-4 quickChips for time/readiness.
 
-2. ONLY IF Assaf provides specific daily inputs (e.g., available minutes, energy level, soreness, or asks for a routine):
-   - Generate or update the "updatedPlan" object with a tailored routine.
+2. ONLY IF Assaf provides specific daily inputs:
+   - Generate or update "updatedPlan" with a routine appropriately scaled for his current form & training density.
 
 Current Active Plan:
 ${currentPlan ? JSON.stringify(currentPlan) : 'None'}
@@ -77,15 +106,15 @@ User Message: "${messageText}"
 
 You MUST respond ONLY with a valid JSON object matching this exact schema:
 {
-  "speech": "Your natural, encouraging response directly addressing Assaf. Explain how today's plan diversifies from recent workouts.",
+  "speech": "Your natural, encouraging response directly addressing Assaf. Reference his training gap/form assessment when relevant.",
   "quickChips": ["3-4 contextual follow-up quick reply options"],
   "updatedPlan": null OR {
-    "type": "Workout Type (e.g. Calisthenics & Jump Rope HIIT, Snowboard Leg Primer, Tennis Agility & Footwork, Active Recovery)",
+    "type": "Workout Type (e.g. Ramp-Up Calisthenics, Calisthenics & Jump Rope HIIT, Snowboard Leg Primer, Active Recovery)",
     "title": "Title of today's plan",
     "summary": "Brief summary",
     "readinessScore": 85,
     "estimatedMinutes": 20,
-    "aiAdvice": "Targeted coach advice for Assaf",
+    "aiAdvice": "Targeted coach advice based on current form",
     "routines": [
       {
         "name": "Routine Block Name",
@@ -143,7 +172,7 @@ You MUST respond ONLY with a valid JSON object matching this exact schema:
       return {
         type: 'TEXT',
         text: parsed.speech || "How is your body feeling today, Assaf?",
-        quickChips: parsed.quickChips || ['Got 20 mins & feeling good', 'Jump Rope & Calisthenics', 'Playing tennis today'],
+        quickChips: parsed.quickChips || ['Got 20 mins & feeling good', 'Ease back in (15 mins)', 'Playing tennis today'],
         updatedPlan: parsed.updatedPlan || null
       };
     } catch (err) {
