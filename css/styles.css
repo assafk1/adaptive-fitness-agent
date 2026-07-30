@@ -29,7 +29,6 @@
 
   --font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 
-  /* Synchronous JS Viewport Height Fix */
   --app-height: 100vh;
 }
 
@@ -44,7 +43,7 @@
 html, body {
   width: 100%;
   max-width: 100vw;
-  overflow-x: hidden;
+  overflow: hidden;
   height: var(--app-height, 100vh);
 }
 
@@ -71,22 +70,21 @@ body {
   box-shadow: var(--shadow-glow);
 }
 
-/* Main Layout Structure */
+/* Flexbox Full-Height Layout Structure */
 .app-container {
   display: flex;
   flex-direction: column;
   height: var(--app-height, 100vh);
-  min-height: var(--app-height, 100vh);
   width: 100%;
   max-width: 768px;
   margin: 0 auto;
-  padding-bottom: calc(52px + env(safe-area-inset-bottom, 0px));
+  overflow: hidden;
+  position: relative;
 }
 
 /* Sleek 1-Line Mobile Header with iOS Safe Area Inset Top */
 .app-header {
-  position: sticky;
-  top: 0;
+  flex-shrink: 0;
   z-index: 100;
   display: flex;
   align-items: center;
@@ -201,87 +199,31 @@ body {
   min-height: 48px;
 }
 
-/* Adaptive Bottom Navigation Bar (Browser vs PWA Mode) */
-.app-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 90;
-  display: flex;
-  justify-content: space-around;
-  padding-top: 4px;
-  padding-bottom: calc(4px + env(safe-area-inset-bottom, 0px));
-  padding-left: 12px;
-  padding-right: 12px;
-  background: rgba(15, 23, 42, 0.95);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid var(--border-glass);
-  max-width: 768px;
-  margin: 0 auto;
-}
-
-.tab-btn {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  padding: 6px 0;
-  background: transparent;
-  border: none;
-  color: var(--text-secondary);
-  font-family: inherit;
-  font-size: 11px;
-  font-weight: 600;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.tab-btn .nav-icon {
-  font-size: 18px;
-}
-
-.tab-btn.active {
-  color: var(--accent-primary);
-  background: rgba(16, 185, 129, 0.12);
-}
-
-/* Main View Content */
+/* Flexbox Main View Area (Fills space between Header and Bottom Nav) */
 .main-content {
-  padding: 12px;
   flex: 1;
-  overflow: hidden;
-}
-
-/* Dynamic Chat Viewport Height with Initial Load Fix */
-.chat-wrapper {
   display: flex;
   flex-direction: column;
-  height: calc(var(--app-height, 100vh) - 116px - env(safe-area-inset-top, 20px) - env(safe-area-inset-bottom, 0px));
-  max-height: 800px;
-  padding: 12px;
+  min-height: 0; /* Crucial for flexbox scrolling */
+  overflow: hidden;
+  padding: 8px 12px 0 12px;
 }
 
-/* Standalone PWA Display Mode Specific Initial Adjustments */
-@media (display-mode: standalone), (display-mode: fullscreen) {
-  .app-nav {
-    padding-bottom: max(4px, env(safe-area-inset-bottom, 0px));
-  }
-  .app-container {
-    padding-bottom: calc(48px + env(safe-area-inset-bottom, 0px));
-  }
-  .chat-wrapper {
-    height: calc(var(--app-height, 100vh) - 106px - env(safe-area-inset-top, 20px) - env(safe-area-inset-bottom, 0px));
-  }
+/* Pure Flexbox Chat Wrapper - Never Overlaps Bottom Nav */
+.chat-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  padding: 10px;
+  border-radius: var(--radius-md);
 }
 
 .chat-feed {
   flex: 1;
   overflow-y: auto;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -337,11 +279,11 @@ body {
 }
 
 .quick-chips-container {
+  flex-shrink: 0;
   display: flex;
   gap: 8px;
   overflow-x: auto;
-  padding: 8px 0;
-  margin-top: 6px;
+  padding: 8px 0 4px 0;
   scrollbar-width: none;
 }
 
@@ -368,16 +310,17 @@ body {
 }
 
 .chat-input-bar {
+  flex-shrink: 0;
   display: flex;
   gap: 8px;
-  margin-top: 8px;
-  padding-top: 4px;
+  padding-top: 6px;
+  padding-bottom: 4px;
 }
 
 .chat-input-bar input {
   flex: 1;
   padding: 10px 14px;
-  background: rgba(15, 23, 42, 0.8);
+  background: rgba(15, 23, 42, 0.9);
   border: 1px solid var(--border-glass-bright);
   border-radius: var(--radius-md);
   color: var(--text-primary);
@@ -390,9 +333,55 @@ body {
   border-color: var(--accent-primary);
 }
 
-/* Workout Card */
+/* Adaptive Bottom Navigation Bar (Flex-Shrink 0) */
+.app-nav {
+  flex-shrink: 0;
+  z-index: 90;
+  display: flex;
+  justify-content: space-around;
+  padding-top: 6px;
+  padding-bottom: calc(6px + env(safe-area-inset-bottom, 12px));
+  padding-left: 12px;
+  padding-right: 12px;
+  background: rgba(15, 23, 42, 0.96);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border-glass);
+  width: 100%;
+}
+
+.tab-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 6px 0;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tab-btn .nav-icon {
+  font-size: 18px;
+}
+
+.tab-btn.active {
+  color: var(--accent-primary);
+  background: rgba(16, 185, 129, 0.12);
+}
+
+/* Workout Card Container */
 .workout-card {
   padding: 16px;
+  overflow-y: auto;
 }
 
 .workout-header {
