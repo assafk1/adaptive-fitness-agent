@@ -1,7 +1,7 @@
-// Conversational Chat Interface Component with Live Layout Debug Inspector
+// Clean Bare-Bones Conversational Chat Component
 
 export const ChatComponent = {
-  render(containerEl, messages = [], quickChips = [], onSendMessage, onChipClick, onOpenCheckin) {
+  render(containerEl, messages = [], quickChips = [], onSendMessage, onChipClick) {
     const messagesHtml = messages.map(msg => {
       let planWidgetHtml = '';
 
@@ -30,16 +30,16 @@ export const ChatComponent = {
         }
 
         planWidgetHtml = `
-          <div class="chat-plan-card glassmorphism" style="margin-top: 12px; padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--accent-primary);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <div class="chat-plan-card glassmorphism" style="margin-top: 10px; padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--accent-primary);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
               <span class="badge badge-primary">${type || 'Custom Plan'}</span>
               <span style="font-size: 12px; color: var(--text-secondary);">⏱️ ${estimatedMinutes || 15} Mins</span>
             </div>
-            <h4 style="margin-bottom: 8px; color: var(--text-primary);">${title || 'Adaptive Routine'}</h4>
-            <div class="chat-exercise-list" style="margin-bottom: 12px;">
+            <h4 style="margin-bottom: 6px; color: var(--text-primary); font-size: 15px;">${title || 'Adaptive Routine'}</h4>
+            <div class="chat-exercise-list" style="margin-bottom: 10px;">
               ${exerciseListHtml}
             </div>
-            <button class="btn btn-primary btn-sm btn-block view-plan-btn">🏋️ View & Track Full Workout Plan</button>
+            <button class="btn btn-primary btn-sm btn-block view-plan-btn">🏋️ View & Track Workout</button>
           </div>
         `;
       }
@@ -65,15 +65,6 @@ export const ChatComponent = {
 
     const html = `
       <div class="chat-wrapper glassmorphism">
-        <!-- LIVE LAYOUT DEBUG INSPECTOR OVERLAY -->
-        <div id="layout-debug-inspector" style="background: rgba(15, 23, 42, 0.95); border: 1px solid var(--accent-amber); border-radius: var(--radius-sm); padding: 8px 12px; font-size: 11px; color: var(--accent-amber); margin-bottom: 8px; font-family: monospace;">
-          <div style="display: flex; justify-content: space-between; align-items: center; font-weight: bold; margin-bottom: 4px;">
-            <span>📐 FOOTER & VIEWPORT DEBUG INSPECTOR</span>
-            <button id="toggle-debug-btn" style="background: none; border: none; color: white; cursor: pointer;">✖</button>
-          </div>
-          <div id="debug-metrics-content">Calculating layout metrics...</div>
-        </div>
-
         <div class="chat-feed" id="chat-feed-box">
           ${messagesHtml}
         </div>
@@ -96,57 +87,7 @@ export const ChatComponent = {
 
     const inputField = document.getElementById('chat-input-field');
     const sendBtn = document.getElementById('chat-send-btn');
-    const debugInspector = document.getElementById('layout-debug-inspector');
-    const toggleDebugBtn = document.getElementById('toggle-debug-btn');
 
-    if (toggleDebugBtn) {
-      toggleDebugBtn.addEventListener('click', () => {
-        debugInspector.style.display = debugInspector.style.display === 'none' ? 'block' : 'none';
-      });
-    }
-
-    // Real-Time Computed Styles Inspector Function
-    const updateDebugMetrics = () => {
-      const metricsEl = document.getElementById('debug-metrics-content');
-      if (!metricsEl) return;
-
-      const navEl = document.querySelector('.app-nav');
-      const containerEl = document.querySelector('.app-container');
-      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-
-      let navHeight = 0, navPaddingBottom = '0px', navMarginBottom = '0px', navBottom = '0px';
-      let containerPaddingBottom = '0px';
-
-      if (navEl) {
-        const csNav = window.getComputedStyle(navEl);
-        navHeight = navEl.offsetHeight;
-        navPaddingBottom = csNav.paddingBottom;
-        navMarginBottom = csNav.marginBottom;
-        navBottom = csNav.bottom;
-      }
-
-      if (containerEl) {
-        const csContainer = window.getComputedStyle(containerEl);
-        containerPaddingBottom = csContainer.paddingBottom;
-      }
-
-      metricsEl.innerHTML = `
-        • <strong>Mode</strong>: ${isStandalone ? '📱 Standalone PWA' : '🌐 Mobile Browser'}<br/>
-        • <strong>Inner Height</strong>: ${window.innerHeight}px | <strong>Screen Height</strong>: ${window.screen.height}px<br/>
-        • <strong>Footer Height</strong>: ${navHeight}px<br/>
-        • <strong>Footer Padding-Bottom</strong>: ${navPaddingBottom}<br/>
-        • <strong>Footer Margin-Bottom</strong>: ${navMarginBottom}<br/>
-        • <strong>Footer CSS Bottom</strong>: ${navBottom}<br/>
-        • <strong>Container Padding-Bottom</strong>: ${containerPaddingBottom}
-      `;
-    };
-
-    // Update metrics immediately and on resize
-    updateDebugMetrics();
-    window.addEventListener('resize', updateDebugMetrics);
-    setTimeout(updateDebugMetrics, 500);
-
-    // View Plan buttons inside chat
     containerEl.querySelectorAll('.view-plan-btn').forEach(btn => {
       btn.addEventListener('click', () => onChipClick('Show today\'s plan'));
     });

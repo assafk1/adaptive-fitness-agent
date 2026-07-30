@@ -1,4 +1,4 @@
-// Main Application Controller - Mobile-First Architecture
+// Main Application Controller - Bare-Bones Minimal Architecture
 
 import { Storage } from './services/storage.js';
 import { FitnessEngine } from './services/fitnessEngine.js';
@@ -7,15 +7,12 @@ import { NotificationManager } from './components/notifications.js';
 import { PushService } from './services/pushService.js';
 
 import { ChatComponent } from './components/chat.js';
-import { CheckInComponent } from './components/checkin.js';
 import { WorkoutComponent } from './components/workout.js';
 import { ProfileComponent } from './components/profile.js';
-import { DashboardComponent } from './components/dashboard.js';
 
 class AdaptiveCoachApp {
   constructor() {
     this.profile = Storage.getProfile();
-    this.todayCheckIn = Storage.getTodayCheckIn();
     this.currentPlan = null;
     this.messages = [];
     this.quickChips = [];
@@ -26,7 +23,7 @@ class AdaptiveCoachApp {
 
   init() {
     this.registerServiceWorker();
-    this.loadTodayState();
+    this.loadInitialState();
     this.initHeaderButtons();
     this.initTabNavigation();
     this.renderActiveTab();
@@ -50,35 +47,20 @@ class AdaptiveCoachApp {
     }
   }
 
-  loadTodayState() {
+  loadInitialState() {
     this.profile = Storage.getProfile();
-    if (this.todayCheckIn) {
-      this.currentPlan = FitnessEngine.generateDailyPlan(this.todayCheckIn, this.profile);
-    }
 
-    const greeting = AgentLogic.getMorningGreeting(this.profile, !!this.todayCheckIn);
+    const greeting = AgentLogic.getMorningGreeting(this.profile);
     this.messages.push({
       sender: 'agent',
       text: greeting.text,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     });
-    this.quickChips = [...greeting.quickChips, '🔔 Test Push Alert'];
-
-    if (this.currentPlan) {
-      this.messages.push({
-        sender: 'agent',
-        text: `🎯 **Today's Adaptive Plan:** ${this.currentPlan.title} (${this.currentPlan.estimatedMinutes} Mins)\nReadiness Score: ${this.currentPlan.readinessScore}%`,
-        plan: this.currentPlan,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      });
-    }
+    this.quickChips = greeting.quickChips;
   }
 
   initHeaderButtons() {
-    const checkinBtn = document.getElementById('hdr-checkin-btn');
     const settingsBtn = document.getElementById('hdr-settings-btn');
-
-    if (checkinBtn) checkinBtn.addEventListener('click', () => this.openCheckinModal());
     if (settingsBtn) settingsBtn.addEventListener('click', () => this.openSettingsDrawer());
   }
 
@@ -120,8 +102,7 @@ class AdaptiveCoachApp {
         this.messages,
         this.quickChips,
         (msgText) => this.handleUserMessage(msgText),
-        (chipText) => this.handleChipClick(chipText),
-        () => this.openCheckinModal()
+        (chipText) => this.handleChipClick(chipText)
       );
     } else if (this.activeTab === 'plan') {
       WorkoutComponent.renderWorkoutCard(
@@ -129,10 +110,6 @@ class AdaptiveCoachApp {
         this.currentPlan,
         (workoutLog) => this.handleLogWorkout(workoutLog)
       );
-    } else if (this.activeTab === 'dashboard') {
-      const checkIns = Storage.getCheckIns();
-      const logs = Storage.getWorkoutLogs();
-      DashboardComponent.render(viewContainer, checkIns, logs);
     }
   }
 
@@ -145,16 +122,15 @@ class AdaptiveCoachApp {
     const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     this.messages.push({ sender: 'user', text, time: timeStr });
 
-    const selectedModel = AgentLogic.getSelectedModel();
     const thinkingMsgIndex = this.messages.length;
     this.messages.push({
       sender: 'agent',
-      text: `🤖 *Thinking and customizing your plan with ${selectedModel}...*`,
+      text: `🤖 *Thinking and customizing your plan with Gemini 2.0...*`,
       time: timeStr
     });
     this.renderActiveTab();
 
-    const response = await AgentLogic.processUserMessage(text, this.todayCheckIn, this.profile, this.currentPlan, this.messages);
+    const response = await AgentLogic.processUserMessage(text, null, this.profile, this.currentPlan, this.messages);
 
     if (response.updatedPlan) {
       this.currentPlan = response.updatedPlan;
@@ -179,8 +155,6 @@ class AdaptiveCoachApp {
       this.triggerTestPush();
     } else if (chipText.includes('🔑 Set Gemini Key') || chipText.includes('Check Gemini Key')) {
       this.openSettingsDrawer();
-    } else if (chipText.includes('Check-in') || chipText.includes('Start Daily')) {
-      this.openCheckinModal();
     } else if (chipText.includes('Show today\'s plan')) {
       this.activeTab = 'plan';
       document.querySelectorAll('.tab-btn').forEach(t => t.classList.toggle('active', t.dataset.tab === 'plan'));
@@ -190,24 +164,11 @@ class AdaptiveCoachApp {
     }
   }
 
-  openCheckinModal() {
-    const modalContainer = document.getElementById('modal-container');
-    CheckInComponent.renderModal(modalContainer, this.todayCheckIn, async (checkInData) => {
-      this.todayCheckIn = Storage.saveDailyCheckIn(checkInData);
-      this.currentPlan = FitnessEngine.generateDailyPlan(this.todayCheckIn, this.profile);
-
-      const promptText = `I completed my daily check-in: Energy ${checkInData.energyLevel}/10, Soreness ${checkInData.sorenessLevel}/10, Available time: ${checkInData.availableMinutes} mins, Sports today: ${checkInData.sportsToday.join(', ') || 'None'}. Please generate today's adaptive plan.`;
-      await this.handleUserMessage(promptText);
-    });
-  }
-
   openSettingsDrawer() {
     this.profile = Storage.getProfile();
     const modalContainer = document.getElementById('modal-container');
-    ProfileComponent.renderModal(modalContainer, this.profile, (updatedProfile, selectedModel) => {
-      this.profile = Storage.saveProfile(updatedProfile);
-      const activeModel = selectedModel || AgentLogic.getSelectedModel();
-      alert(`⚙️ Settings saved! Active AI Model set to: ${activeModel}`);
+    ProfileComponent.renderModal(modalContainer, this.profile, () => {
+      alert('⚙️ Settings saved successfully!');
       this.renderActiveTab();
     });
   }
@@ -216,11 +177,11 @@ class AdaptiveCoachApp {
     Storage.logCompletedWorkout(workoutLog);
     this.messages.push({
       sender: 'agent',
-      text: `🎉 Awesome job completing **${workoutLog.title}**! Session logged to your analytics timeline.`,
+      text: `🎉 Awesome job completing **${workoutLog.title}**! Session logged to your history.`,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     });
-    this.activeTab = 'dashboard';
-    document.querySelectorAll('.tab-btn').forEach(t => t.classList.toggle('active', t.dataset.tab === 'dashboard'));
+    this.activeTab = 'chat';
+    document.querySelectorAll('.tab-btn').forEach(t => t.classList.toggle('active', t.dataset.tab === 'chat'));
     this.renderActiveTab();
   }
 }
