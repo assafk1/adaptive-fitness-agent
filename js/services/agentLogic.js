@@ -1,4 +1,4 @@
-// Bare-Bones Google Gemini AI Coach Engine with Hardcoded Personal Profile & Goals
+// Bare-Bones Google Gemini AI Coach Engine with Flagship Gemini 2.0 Flash Model
 
 import { Storage } from './storage.js';
 
@@ -90,54 +90,61 @@ You MUST respond ONLY with a valid JSON object matching this exact schema:
   }
 }`;
 
-    const model = 'gemini-2.0-flash';
-    try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    // Modern Gemini Flash models (Primary: gemini-2.0-flash, Fallback: gemini-1.5-flash-latest)
+    const models = ['gemini-2.0-flash', 'gemini-1.5-flash-latest'];
+    let lastError = null;
 
-      const payload = {
-        system_instruction: {
-          parts: [{ text: systemPromptText }]
-        },
-        contents: [
-          {
-            role: 'user',
-            parts: [{ text: messageText }]
+    for (const model of models) {
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+        const payload = {
+          system_instruction: {
+            parts: [{ text: systemPromptText }]
+          },
+          contents: [
+            {
+              role: 'user',
+              parts: [{ text: messageText }]
+            }
+          ],
+          generationConfig: {
+            response_mime_type: 'application/json'
           }
-        ],
-        generationConfig: {
-          response_mime_type: 'application/json'
+        };
+
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error?.message || `API Error ${response.status}`);
         }
-      };
 
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+        const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        const jsonText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+        const parsed = JSON.parse(jsonText);
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error?.message || `API Error ${response.status}`);
+        return {
+          type: 'TEXT',
+          text: parsed.speech || "I've updated your plan based on our conversation!",
+          quickChips: parsed.quickChips || ['Show today\'s plan', 'I feel more tired now'],
+          updatedPlan: parsed.updatedPlan || null
+        };
+      } catch (err) {
+        console.warn(`Model ${model} call failed:`, err.message);
+        lastError = err;
       }
-
-      const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-      const jsonText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
-      const parsed = JSON.parse(jsonText);
-
-      return {
-        type: 'TEXT',
-        text: parsed.speech || "I've updated your plan based on our conversation!",
-        quickChips: parsed.quickChips || ['Show today\'s plan', 'I feel more tired now'],
-        updatedPlan: parsed.updatedPlan || null
-      };
-    } catch (err) {
-      console.warn(`Gemini call failed:`, err.message);
-      return {
-        type: 'TEXT',
-        text: `⚠️ **Gemini AI Error**: ${err.message}. Please check your API key by tapping 🔑 Key in the header.`,
-        quickChips: ['🔑 Check Gemini Key']
-      };
     }
+
+    return {
+      type: 'TEXT',
+      text: `⚠️ **Gemini AI Error**: ${lastError?.message || 'Failed to connect to Gemini'}. Please check your API key by tapping 🔑 Key in the header.`,
+      quickChips: ['🔑 Check Gemini Key']
+    };
   }
 };
