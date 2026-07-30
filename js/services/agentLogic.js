@@ -15,7 +15,7 @@ export const AgentLogic = {
 
   /**
    * Fetches available models using Google Gemini ModelService.ListModels API
-   * Filters out deprecated/legacy models (bison, 1.0, 2.5-flash, etc.)
+   * Filters out non-text/image-only models and legacy models
    */
   async fetchAvailableModels(apiKey) {
     const key = apiKey || this.getApiKey();
@@ -29,8 +29,8 @@ export const AgentLogic = {
       const data = await response.json();
       const models = data.models || [];
 
-      // Deprecated/Legacy keywords to exclude
-      const deprecatedKeywords = ['bison', '1.0', '2.5-flash', 'legacy', 'deprecated', 'embedding', 'aqa', 'imagen'];
+      // Image-only, legacy, embedding, and non-text keywords to exclude
+      const excludeKeywords = ['image', 'imagen', 'vision', 'bison', '1.0', '2.5-flash', 'legacy', 'deprecated', 'embedding', 'aqa', 'tts'];
 
       return models
         .filter(m => {
@@ -38,8 +38,8 @@ export const AgentLogic = {
           if (!supportsContent) return false;
 
           const modelId = m.name.replace('models/', '').toLowerCase();
-          const isDeprecated = deprecatedKeywords.some(kw => modelId.includes(kw));
-          return !isDeprecated;
+          const shouldExclude = excludeKeywords.some(kw => modelId.includes(kw));
+          return !shouldExclude;
         })
         .map(m => {
           const modelId = m.name.replace('models/', '');
