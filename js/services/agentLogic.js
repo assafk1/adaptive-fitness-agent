@@ -1,4 +1,4 @@
-// Bare-Bones Google Gemini AI Coach Engine with Flagship Gemini 2.0 Flash Model
+// Bare-Bones Google Gemini AI Coach Engine with Gemini 1.5 Active Models
 
 import { Storage } from './storage.js';
 
@@ -90,8 +90,8 @@ You MUST respond ONLY with a valid JSON object matching this exact schema:
   }
 }`;
 
-    // Modern Gemini Flash models (Primary: gemini-2.0-flash, Fallback: gemini-1.5-flash-latest)
-    const models = ['gemini-2.0-flash', 'gemini-1.5-flash-latest'];
+    // Active Stable Production Gemini Models
+    const models = ['gemini-1.5-flash', 'gemini-1.5-flash-latest', 'gemini-1.5-pro', 'gemini-1.5-pro-latest'];
     let lastError = null;
 
     for (const model of models) {
