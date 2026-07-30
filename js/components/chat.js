@@ -1,4 +1,4 @@
-// Conversational Chat Interface Component with Embedded Plan Widgets
+// Conversational Chat Interface Component with Live Layout Debug Inspector
 
 export const ChatComponent = {
   render(containerEl, messages = [], quickChips = [], onSendMessage, onChipClick, onOpenCheckin) {
@@ -65,16 +65,13 @@ export const ChatComponent = {
 
     const html = `
       <div class="chat-wrapper glassmorphism">
-        <!-- PROACTIVE MORNING PING BANNER -->
-        <div class="proactive-ping-banner" id="ping-banner">
-          <div class="ping-info">
-            <span class="ping-icon">🔔</span>
-            <div>
-              <strong>Morning Check-in Alert</strong>
-              <p>Ready to align today's workout & recovery plan?</p>
-            </div>
+        <!-- LIVE LAYOUT DEBUG INSPECTOR OVERLAY -->
+        <div id="layout-debug-inspector" style="background: rgba(15, 23, 42, 0.95); border: 1px solid var(--accent-amber); border-radius: var(--radius-sm); padding: 8px 12px; font-size: 11px; color: var(--accent-amber); margin-bottom: 8px; font-family: monospace;">
+          <div style="display: flex; justify-content: space-between; align-items: center; font-weight: bold; margin-bottom: 4px;">
+            <span>📐 FOOTER & VIEWPORT DEBUG INSPECTOR</span>
+            <button id="toggle-debug-btn" style="background: none; border: none; color: white; cursor: pointer;">✖</button>
           </div>
-          <button class="btn btn-primary btn-sm" id="banner-checkin-btn">⚡ Start Daily Check-in</button>
+          <div id="debug-metrics-content">Calculating layout metrics...</div>
         </div>
 
         <div class="chat-feed" id="chat-feed-box">
@@ -86,7 +83,7 @@ export const ChatComponent = {
         </div>
 
         <div class="chat-input-bar">
-          <input type="text" id="chat-input-field" placeholder="Tell your coach how you feel today, e.g. 'Playing tennis at 5pm'..." />
+          <input type="text" id="chat-input-field" placeholder="Tell your coach how you feel today..." />
           <button class="btn btn-primary" id="chat-send-btn">Send 🚀</button>
         </div>
       </div>
@@ -99,11 +96,55 @@ export const ChatComponent = {
 
     const inputField = document.getElementById('chat-input-field');
     const sendBtn = document.getElementById('chat-send-btn');
-    const bannerBtn = document.getElementById('banner-checkin-btn');
+    const debugInspector = document.getElementById('layout-debug-inspector');
+    const toggleDebugBtn = document.getElementById('toggle-debug-btn');
 
-    if (bannerBtn) {
-      bannerBtn.addEventListener('click', () => onOpenCheckin());
+    if (toggleDebugBtn) {
+      toggleDebugBtn.addEventListener('click', () => {
+        debugInspector.style.display = debugInspector.style.display === 'none' ? 'block' : 'none';
+      });
     }
+
+    // Real-Time Computed Styles Inspector Function
+    const updateDebugMetrics = () => {
+      const metricsEl = document.getElementById('debug-metrics-content');
+      if (!metricsEl) return;
+
+      const navEl = document.querySelector('.app-nav');
+      const containerEl = document.querySelector('.app-container');
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+      let navHeight = 0, navPaddingBottom = '0px', navMarginBottom = '0px', navBottom = '0px';
+      let containerPaddingBottom = '0px';
+
+      if (navEl) {
+        const csNav = window.getComputedStyle(navEl);
+        navHeight = navEl.offsetHeight;
+        navPaddingBottom = csNav.paddingBottom;
+        navMarginBottom = csNav.marginBottom;
+        navBottom = csNav.bottom;
+      }
+
+      if (containerEl) {
+        const csContainer = window.getComputedStyle(containerEl);
+        containerPaddingBottom = csContainer.paddingBottom;
+      }
+
+      metricsEl.innerHTML = `
+        • <strong>Mode</strong>: ${isStandalone ? '📱 Standalone PWA' : '🌐 Mobile Browser'}<br/>
+        • <strong>Inner Height</strong>: ${window.innerHeight}px | <strong>Screen Height</strong>: ${window.screen.height}px<br/>
+        • <strong>Footer Height</strong>: ${navHeight}px<br/>
+        • <strong>Footer Padding-Bottom</strong>: ${navPaddingBottom}<br/>
+        • <strong>Footer Margin-Bottom</strong>: ${navMarginBottom}<br/>
+        • <strong>Footer CSS Bottom</strong>: ${navBottom}<br/>
+        • <strong>Container Padding-Bottom</strong>: ${containerPaddingBottom}
+      `;
+    };
+
+    // Update metrics immediately and on resize
+    updateDebugMetrics();
+    window.addEventListener('resize', updateDebugMetrics);
+    setTimeout(updateDebugMetrics, 500);
 
     // View Plan buttons inside chat
     containerEl.querySelectorAll('.view-plan-btn').forEach(btn => {
@@ -122,7 +163,6 @@ export const ChatComponent = {
       if (e.key === 'Enter') handleSend();
     });
 
-    // Quick chip click
     const chipsBox = document.getElementById('chips-box');
     chipsBox.addEventListener('click', (e) => {
       if (e.target.classList.contains('chip-action')) {
