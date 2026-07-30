@@ -43,6 +43,7 @@ html, body {
   max-width: 100vw;
   overflow-x: hidden;
   height: 100%;
+  height: 100dvh;
 }
 
 body {
@@ -72,11 +73,11 @@ body {
 .app-container {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  min-height: 100dvh;
   width: 100%;
   max-width: 768px;
   margin: 0 auto;
-  padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px)); /* Space for bottom nav */
+  padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
 }
 
 /* Sleek 1-Line Mobile Header with iOS Safe Area Inset Top */
@@ -197,7 +198,7 @@ body {
   min-height: 48px;
 }
 
-/* Compact Bottom Navigation Bar */
+/* Adaptive Bottom Navigation Bar (Browser vs PWA Mode) */
 .app-nav {
   position: fixed;
   bottom: 0;
@@ -206,8 +207,8 @@ body {
   z-index: 90;
   display: flex;
   justify-content: space-around;
-  padding-top: 6px;
-  padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+  padding-top: 4px;
+  padding-bottom: calc(4px + env(safe-area-inset-bottom, 0px));
   padding-left: 12px;
   padding-right: 12px;
   background: rgba(15, 23, 42, 0.95);
@@ -252,13 +253,26 @@ body {
   flex: 1;
 }
 
-/* Chat Feed UI & Input Bar Fix */
+/* Dynamic Chat Viewport Height (Browser vs Standalone PWA) */
 .chat-wrapper {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 130px - env(safe-area-inset-top, 20px) - env(safe-area-inset-bottom, 0px));
-  max-height: 750px;
+  height: calc(100dvh - 120px - env(safe-area-inset-top, 20px) - env(safe-area-inset-bottom, 0px));
+  max-height: 780px;
   padding: 12px;
+}
+
+/* Standalone PWA Display Mode Specific Adjustments */
+@media (display-mode: standalone), (display-mode: fullscreen) {
+  .app-nav {
+    padding-bottom: max(6px, env(safe-area-inset-bottom, 0px));
+  }
+  .app-container {
+    padding-bottom: calc(52px + env(safe-area-inset-bottom, 0px));
+  }
+  .chat-wrapper {
+    height: calc(100dvh - 110px - env(safe-area-inset-top, 20px) - env(safe-area-inset-bottom, 0px));
+  }
 }
 
 .chat-feed {
