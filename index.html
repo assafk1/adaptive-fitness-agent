@@ -5,19 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Adaptive Coach - Personal AI Fitness & Recovery Agent</title>
 
-  <!-- Synchronous Initial Viewport Height Calculator for iOS PWA Launch -->
-  <script>
-    (function() {
-      function setAppHeight() {
-        var h = window.innerHeight;
-        document.documentElement.style.setProperty('--app-height', h + 'px');
-      }
-      window.addEventListener('resize', setAppHeight);
-      window.addEventListener('orientationchange', setAppHeight);
-      setAppHeight();
-    })();
-  </script>
-
   <!-- PWA & iOS Meta Tags -->
   <link rel="manifest" href="manifest.json?v=16" />
   <meta name="theme-color" content="#0f172a" />
