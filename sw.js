@@ -1,11 +1,11 @@
 // Service Worker for Adaptive Coach PWA & iOS Native Push Notifications
 
-const CACHE_NAME = 'adaptive-coach-v7';
+const CACHE_NAME = 'adaptive-coach-v8';
 const ASSETS_TO_CACHE = [
   './',
-  './index.html?v=7',
-  './css/styles.css?v=7',
-  './js/app.js?v=7',
+  './index.html?v=8',
+  './css/styles.css?v=8',
+  './js/app.js?v=8',
   './manifest.json'
 ];
 

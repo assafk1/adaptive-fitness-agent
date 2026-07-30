@@ -1,4 +1,4 @@
-// Live Google Gemini AI Agent & Persona Engine with Filtered ModelService.ListModels
+// Live Google Gemini AI Agent & Persona Engine with Dynamic ModelService.ListModels
 
 import { Storage } from './storage.js';
 
@@ -34,13 +34,10 @@ export const AgentLogic = {
 
       return models
         .filter(m => {
-          // 1. Must support generateContent
           const supportsContent = m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent');
           if (!supportsContent) return false;
 
           const modelId = m.name.replace('models/', '').toLowerCase();
-
-          // 2. Filter out deprecated/legacy models
           const isDeprecated = deprecatedKeywords.some(kw => modelId.includes(kw));
           return !isDeprecated;
         })
@@ -73,7 +70,7 @@ export const AgentLogic = {
     }
 
     return {
-      text: `Good ${timeOfDay}, ${name}! 👋 I'm your adaptive Gemini AI coach. Let's align today's schedule and check how your body is feeling. 
+      text: `Good ${timeOfDay}, ${name}! 👋 I'm your adaptive Gemini AI coach. Let me know how your body is feeling today to customize your workout & recovery plan. 
       \nDo you have 15-30 minutes for a session today, or any external sports planned (like tennis, soccer, or running)?`,
       quickChips: [
         '⚡ Start Daily Check-in',
@@ -90,7 +87,7 @@ export const AgentLogic = {
     if (!apiKey) {
       return {
         type: 'TEXT',
-        text: `⚠️ **Gemini API Key Required**: To have a full-blown AI conversation and dynamic plan adjustments powered by Gemini, please click **🔑 Gemini Key** in the header to enter your free Google Gemini API key!`,
+        text: `⚠️ **Gemini API Key Required**: To enable live AI coach conversations and dynamic workout plan generation, please tap **⚙️ Settings** in the top header to enter your free Google Gemini API key!`,
         quickChips: ['🔑 Set Gemini Key', '⚡ Start Daily Check-in']
       };
     }
@@ -196,7 +193,7 @@ You MUST respond with a JSON object matching this exact schema:
 
     return {
       type: 'TEXT',
-      text: `⚠️ **Gemini AI Error**: ${lastError?.message || 'Failed to connect to Gemini'}. Please check your API key by tapping 🔑 Gemini Key.`,
+      text: `⚠️ **Gemini AI Error**: ${lastError?.message || 'Failed to connect to Gemini'}. Please check your API key by tapping ⚙️ Settings in the top header.`,
       quickChips: ['🔑 Check Gemini Key', 'Retry message']
     };
   }
