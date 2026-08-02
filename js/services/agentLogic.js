@@ -1,4 +1,4 @@
-// CaliXpert & Squat University Grounded AI Fitness Engine (100% Bar-Free Equipment Restriction)
+// Unconfined Google Gemini AI Coach Engine with Free Routine Generation
 
 import { Storage } from './storage.js';
 
@@ -18,7 +18,7 @@ export const AgentLogic = {
       text: `Good ${timeOfDay}, Assaf! 👋 How is your body feeling today, and how much time do you have for a session?`,
       quickChips: [
         'Got 15 mins & feeling good',
-        'Got 30 mins (Rope & Floor Calisthenics)',
+        'Got 30 mins (Rope & Calisthenics)',
         'Playing tennis today',
         'Snowboard leg prep'
       ]
@@ -72,18 +72,13 @@ Assaf's Profile & Life Context:
 - Life Context: Busy family man needing a flexible daily coach.
 - Long-Term Goals: Tennis footwork/stamina, Snowboard quad/glute/knee prep, Weight maintenance around 85kg.
 
-HARD EQUIPMENT & BAR RESTRICTION (STRICT):
+EQUIPMENT RESTRICTION:
 Assaf does NOT have any Pull-up Bar or Parallel Bars! 
-DO NOT prescribe any exercise requiring a pull-up bar, dip bar, or gymnastics rings (e.g. NO Pull-ups, NO Chin-ups, NO Bar Dips, NO Hanging Knee Raises).
+DO NOT prescribe any exercise requiring a pull-up bar, dip bar, or gymnastics rings.
 Allowed Equipment ONLY: Floor / Yoga Mat, Chair / Bench, Jump Rope, Outdoor Running Shoes, Doorframe Iso Pulls.
 
-APPROVED CALIXPERT & MOBILITY EXERCISE LIBRARY (BAR-FREE):
-1. Floor & Chair Calisthenics Pushing: Push-up, Diamond Push-up, Wide Push-up, Decline Push-up, Pike Push-up, Chair/Bench Dips, Floor Tricep Dips.
-2. Floor & Doorframe Pulling & Back: Doorframe Iso Pulls, Towel Door Rows, Prone Y-T-W Retractions, Prone Cobra Hold, Superman Pulls.
-3. Core & Abs (Floor): Forearm Plank, Side Plank, RKC Plank, Hollow Body Hold, Deadbug, Mountain Climbers, Floor L-Sit Hold, Seated Knee Tucks.
-4. Legs & Snowboard Prep: Bodyweight Squats, Bulgarian Split Squats (using Chair), Cossack Squats, Reverse Lunges, Tibialis Raises, Calf Raises, Wall Sit, Single-Leg Romanian Deadlift.
-5. Jump Rope & Cardio: Basic Bounce, Boxer Step, High Knees Jump Rope, Running Intervals.
-6. Mobility & Stretches (Squat University & KOT): World's Greatest Stretch, 90/90 Hip Swivels, Couch Stretch (Quad/Hip Flexor), Pigeon Pose, Cat-Cow, Thoracic Thread-the-Needle, Sleeper Stretch, Ankle Mobility Wall Slides, Child's Pose with Lat Reach.
+FREE GENERATION INSTRUCTION:
+You have complete freedom to prescribe ANY exercise, stretch, calisthenics movement, jump rope footwork, or mobility drill without restriction!
 
 DATED TRAINING DENSITY & FORM ASSESSMENT:
 - Has Completed History Logs: ${isNoHistoryFirstSession ? 'NO (First-time user)' : 'YES'}
@@ -104,7 +99,7 @@ CONVERSATION & READINESS PROTOCOL:
    - Provide 3-4 quickChips for time/readiness.
 
 2. ONLY IF Assaf provides specific daily inputs:
-   - Generate or update "updatedPlan" with a bar-free routine.
+   - Generate or update "updatedPlan" with a tailored routine.
 
 Current Active Plan:
 ${currentPlan ? JSON.stringify(currentPlan) : 'None'}
@@ -116,7 +111,7 @@ You MUST respond ONLY with a valid JSON object matching this exact schema:
   "speech": "Your natural response directly addressing Assaf.",
   "quickChips": ["3-4 contextual follow-up quick reply options"],
   "updatedPlan": null OR {
-    "type": "Workout Type (e.g. Floor Calisthenics & Jump Rope, Snowboard Leg Primer, Tennis Agility & Mobility, Active Recovery)",
+    "type": "Workout Type (e.g. Calisthenics & Jump Rope, Snowboard Leg Primer, Tennis Agility & Mobility, Active Recovery)",
     "title": "Title of today's plan",
     "summary": "Brief summary",
     "readinessScore": 85,
@@ -128,7 +123,7 @@ You MUST respond ONLY with a valid JSON object matching this exact schema:
         "description": "Routine description",
         "exercises": [
           {
-            "name": "Exercise Name",
+            "name": "Exact Exercise Name",
             "defaultSets": 3,
             "defaultReps": 12,
             "defaultDurationSec": 0,
@@ -179,7 +174,7 @@ You MUST respond ONLY with a valid JSON object matching this exact schema:
       return {
         type: 'TEXT',
         text: parsed.speech || "How is your body feeling today, Assaf?",
-        quickChips: parsed.quickChips || ['Got 20 mins & feeling good', 'Rope & Floor Calisthenics (15m)', 'Playing tennis today'],
+        quickChips: parsed.quickChips || ['Got 20 mins & feeling good', 'Rope & Calisthenics (15m)', 'Playing tennis today'],
         updatedPlan: parsed.updatedPlan || null
       };
     } catch (err) {

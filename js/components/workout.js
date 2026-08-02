@@ -1,57 +1,9 @@
-// Interactive Workout, Rest Timer, and CaliXpert + Squat University YouTube Video Guides
-
-const CALIXPERT_AND_SQUATUNI_VIDEOS = {
-  // CALIXPERT CALISTHENICS VIDEOS (BAR-FREE)
-  'push-up': { videoId: 'IODxDxX7oi4', channel: 'CaliXpert' },
-  'diamond push-up': { videoId: '_2M2gTq3fGY', channel: 'CaliXpert' },
-  'pike push-up': { videoId: 'sposDXIE0zc', channel: 'CaliXpert' },
-  'decline push-up': { videoId: 'B-AobTxlAig', channel: 'CaliXpert' },
-  'chair dip': { videoId: '0326dy_-CzM', channel: 'CaliXpert' },
-  'bench dip': { videoId: '0326dy_-CzM', channel: 'CaliXpert' },
-  'floor tricep dip': { videoId: '0326dy_-CzM', channel: 'CaliXpert' },
-  
-  // CORE & ABS (CALIXPERT)
-  'forearm plank': { videoId: 'pSHjTRCQxIw', channel: 'CaliXpert' },
-  'plank': { videoId: 'pSHjTRCQxIw', channel: 'CaliXpert' },
-  'side plank': { videoId: 'N_4lYnLyo5c', channel: 'CaliXpert' },
-  'deadbug': { videoId: '4XLEnwUr1d8', channel: 'CaliXpert' },
-  'hollow body': { videoId: '44ScXWFaVBs', channel: 'CaliXpert' },
-  'mountain climber': { videoId: 'nmwgirgXLYM', channel: 'CaliXpert' },
-
-  // LEGS & SNOWBOARD PREP (CALIXPERT)
-  'squat': { videoId: 'gcNh17Ckjgg', channel: 'CaliXpert' },
-  'bulgarian split squat': { videoId: '2C-uNgKwPLE', channel: 'CaliXpert' },
-  'cossack squat': { videoId: '1-EUvBto8lE', channel: 'CaliXpert' },
-  'lunge': { videoId: 'QOVaHwm-Q6U', channel: 'CaliXpert' },
-  'reverse lunge': { videoId: 'QOVaHwm-Q6U', channel: 'CaliXpert' },
-  'wall sit': { videoId: 'y-wV4Venusw', channel: 'CaliXpert' },
-  'single-leg rdl': { videoId: 'QW_uGfSj99k', channel: 'CaliXpert' },
-  'calf raise': { videoId: '-M4-G8p8fmc', channel: 'CaliXpert' },
-
-  // ROPE SKIPPING (CALIXPERT)
-  'jump rope': { videoId: 'P56_C33f678', channel: 'CaliXpert' },
-  'boxer step': { videoId: '8c6340n0N-E', channel: 'CaliXpert' },
-
-  // STRETCHES & MOBILITY (SQUAT UNIVERSITY & KOT GUY)
-  "world's greatest stretch": { videoId: '28pE9y9vJg8', channel: 'Squat University' },
-  'greatest stretch': { videoId: '28pE9y9vJg8', channel: 'Squat University' },
-  '90/90 hip': { videoId: '_WvVv_13W-0', channel: 'Squat University' },
-  'couch stretch': { videoId: '80w3iW12M9g', channel: 'Knees Over Toes' },
-  'pigeon pose': { videoId: 'cWl2sCjK9lQ', channel: 'Squat University' },
-  'cat-cow': { videoId: 'w_UKcI1gTn8', channel: 'Squat University' },
-  'thoracic thread': { videoId: '_V-QJvQ99p4', channel: 'Squat University' },
-  'sleeper stretch': { videoId: 'G1N4yM-7rZc', channel: 'Squat University' },
-  'ankle mobility': { videoId: 'e4W7-M6Tz0c', channel: 'Squat University' },
-  "child's pose": { videoId: 'm9VwH8qMhO8', channel: 'Squat University' }
-};
+// Interactive Workout, Rest Timer, and Direct YouTube Search Query Integration Component
 
 export const WorkoutComponent = {
-  getVideoInfo(exerciseName = '') {
-    const lower = exerciseName.toLowerCase();
-    for (const key in CALIXPERT_AND_SQUATUNI_VIDEOS) {
-      if (lower.includes(key)) return { name: exerciseName, ...CALIXPERT_AND_SQUATUNI_VIDEOS[key] };
-    }
-    return { name: exerciseName, videoId: null, channel: 'YouTube' };
+  getSearchUrl(exerciseName = '') {
+    const query = `${exerciseName} proper form`;
+    return `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
   },
 
   renderWorkoutCard(containerEl, plan, onComplete) {
@@ -102,7 +54,7 @@ export const WorkoutComponent = {
 
         <div class="workout-meta-bar">
           <span>⏱️ ${estimatedMinutes || 15} Minutes</span>
-          <span>🎥 CaliXpert & SquatUni Videos</span>
+          <span>🔥 Gemini AI Tailored</span>
           <button class="btn btn-outline btn-sm" id="launch-timer-btn">⏱️ Rest Timer</button>
         </div>
 
@@ -131,14 +83,6 @@ export const WorkoutComponent = {
       timerBtn.addEventListener('click', () => this.renderTimerModal(60));
     }
 
-    // Video Guide listeners
-    containerEl.querySelectorAll('.watch-video-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const exName = e.currentTarget.dataset.name;
-        this.renderVideoModal(exName);
-      });
-    });
-
     // Complete listener
     const completeBtn = document.getElementById('complete-workout-btn');
     if (completeBtn) {
@@ -158,13 +102,14 @@ export const WorkoutComponent = {
     if (!ex) return '';
     const totalSets = Math.min(Math.max(parseInt(ex.defaultSets || ex.sets || 3, 10), 1), 6);
     const setsArray = Array.from({ length: totalSets }, (_, i) => i + 1);
+    const searchUrl = this.getSearchUrl(ex.name);
 
     return `
       <div class="exercise-item-row" style="padding: 10px 0; border-bottom: 1px solid var(--border-glass);">
         <div class="exercise-info">
           <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
             <span class="exercise-name" style="font-size: 15px;">${ex.name}</span>
-            <button class="btn btn-outline btn-sm watch-video-btn" data-name="${ex.name}" style="padding: 2px 8px; font-size: 11px;">🎥 Watch Video</button>
+            <a href="${searchUrl}" target="_blank" rel="noopener" class="btn btn-outline btn-sm" style="padding: 2px 8px; font-size: 11px; text-decoration: none;">🎥 Watch Video</a>
           </div>
           <span class="exercise-meta">${ex.defaultSets ? ex.defaultSets + ' Sets x ' : ''}${ex.defaultReps ? ex.defaultReps + ' Reps' : (ex.defaultDurationSec ? Math.round(ex.defaultDurationSec / 60) + ' min hold' : '')}</span>
           <p class="exercise-tips">${ex.tips || ''}</p>
@@ -177,12 +122,13 @@ export const WorkoutComponent = {
   },
 
   renderStretchRow(st) {
+    const searchUrl = this.getSearchUrl(st.name);
     return `
       <div class="exercise-item-row" style="padding: 10px 0; border-bottom: 1px solid var(--border-glass);">
         <div class="exercise-info">
           <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
             <span class="exercise-name" style="font-size: 15px;">🧘 ${st.name}</span>
-            <button class="btn btn-outline btn-sm watch-video-btn" data-name="${st.name}" style="padding: 2px 8px; font-size: 11px;">🎥 Watch Video</button>
+            <a href="${searchUrl}" target="_blank" rel="noopener" class="btn btn-outline btn-sm" style="padding: 2px 8px; font-size: 11px; text-decoration: none;">🎥 Watch Video</a>
           </div>
           <span class="exercise-meta">${st.durationSec}s ${st.perSide ? 'per side' : 'hold'}</span>
           <p class="exercise-tips">${st.tips || ''}</p>
@@ -195,12 +141,13 @@ export const WorkoutComponent = {
   },
 
   renderRoundRow(rd) {
+    const searchUrl = this.getSearchUrl(rd.name);
     return `
       <div class="exercise-item-row" style="padding: 10px 0; border-bottom: 1px solid var(--border-glass);">
         <div class="exercise-info">
           <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
             <span class="exercise-name" style="font-size: 15px;">⚡ ${rd.name}</span>
-            <button class="btn btn-outline btn-sm watch-video-btn" data-name="${rd.name}" style="padding: 2px 8px; font-size: 11px;">🎥 Watch Video</button>
+            <a href="${searchUrl}" target="_blank" rel="noopener" class="btn btn-outline btn-sm" style="padding: 2px 8px; font-size: 11px; text-decoration: none;">🎥 Watch Video</a>
           </div>
           <span class="exercise-meta">${rd.durationSec}s Work | ${rd.restSec || 0}s Rest</span>
           <p class="exercise-tips">${rd.tips || ''}</p>
@@ -222,65 +169,6 @@ export const WorkoutComponent = {
         </div>
       </div>
     `;
-  },
-
-  renderVideoModal(exerciseName) {
-    let modal = document.getElementById('video-guide-modal');
-    if (!modal) {
-      const modalEl = document.createElement('div');
-      modalEl.id = 'video-guide-modal';
-      modalEl.className = 'modal-overlay';
-      document.body.appendChild(modalEl);
-      modal = modalEl;
-    }
-
-    const info = this.getVideoInfo(exerciseName);
-    const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(exerciseName + ' form tutorial ' + info.channel)}`;
-
-    let videoContentHtml = '';
-    if (info.videoId) {
-      videoContentHtml = `
-        <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: var(--radius-sm); margin-bottom: 12px;">
-          <iframe 
-            src="https://www.youtube.com/embed/${info.videoId}?autoplay=1" 
-            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" 
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-            allowfullscreen>
-          </iframe>
-        </div>
-      `;
-    } else {
-      videoContentHtml = `
-        <div style="text-align: center; padding: 24px 12px; background: rgba(255,255,255,0.04); border-radius: var(--radius-sm); margin-bottom: 12px;">
-          <p style="margin-bottom: 12px;">Watch high-quality technique video on YouTube for <strong>${exerciseName}</strong>:</p>
-          <a href="${searchUrl}" target="_blank" class="btn btn-primary btn-block">🎥 Search Video Guide on YouTube</a>
-        </div>
-      `;
-    }
-
-    modal.innerHTML = `
-      <div class="modal-card glassmorphism animate-fade-in" style="max-width: 500px;">
-        <div class="modal-header">
-          <div>
-            <span class="badge badge-primary">${info.channel} Guide</span>
-            <h3 style="margin-top: 4px;">🎥 ${exerciseName}</h3>
-          </div>
-          <button class="btn-icon" id="close-video-btn">&times;</button>
-        </div>
-        ${videoContentHtml}
-        <div style="display: flex; gap: 8px;">
-          <a href="${searchUrl}" target="_blank" class="btn btn-outline btn-sm btn-block">🔎 Open in YouTube App</a>
-          <button class="btn btn-primary btn-sm btn-block" id="done-video-btn">Done</button>
-        </div>
-      </div>
-    `;
-
-    const closeBtn = document.getElementById('close-video-btn');
-    const doneBtn = document.getElementById('done-video-btn');
-
-    const closeModal = () => modal.remove();
-    closeBtn.addEventListener('click', closeModal);
-    doneBtn.addEventListener('click', closeModal);
   },
 
   renderTimerModal(defaultSec = 60) {
