@@ -1,4 +1,4 @@
-// Interactive Workout, Rest Timer, and Exercise Video Demonstration Component
+// Interactive Workout, Rest Timer, and Dynamic Exercise Set Tracker Component
 
 const EXERCISE_VIDEO_MAP = {
   'push': 'IODxDxX7oi4',
@@ -131,6 +131,10 @@ export const WorkoutComponent = {
 
   renderExerciseRow(ex) {
     if (!ex) return '';
+    // Dynamically render the exact number of sets prescribed by Gemini (e.g. 2, 3, or 4 sets)
+    const totalSets = Math.min(Math.max(parseInt(ex.defaultSets || ex.sets || 3, 10), 1), 6);
+    const setsArray = Array.from({ length: totalSets }, (_, i) => i + 1);
+
     return `
       <div class="exercise-item-row" style="padding: 10px 0; border-bottom: 1px solid var(--border-glass);">
         <div class="exercise-info">
@@ -142,7 +146,7 @@ export const WorkoutComponent = {
           <p class="exercise-tips">${ex.tips || ''}</p>
         </div>
         <div class="set-checkboxes">
-          ${[1,2,3].map(setNum => `<label class="checkbox-circle"><input type="checkbox" /> <span>${setNum}</span></label>`).join('')}
+          ${setsArray.map(setNum => `<label class="checkbox-circle" title="Mark Set ${setNum} Complete"><input type="checkbox" /> <span>${setNum}</span></label>`).join('')}
         </div>
       </div>
     `;
@@ -160,7 +164,7 @@ export const WorkoutComponent = {
           <p class="exercise-tips">${st.tips || ''}</p>
         </div>
         <div class="set-checkboxes">
-          <label class="checkbox-circle"><input type="checkbox" /> <span>✓</span></label>
+          <label class="checkbox-circle" title="Mark Complete"><input type="checkbox" /> <span>✓</span></label>
         </div>
       </div>
     `;
@@ -178,7 +182,7 @@ export const WorkoutComponent = {
           <p class="exercise-tips">${rd.tips || ''}</p>
         </div>
         <div class="set-checkboxes">
-          <label class="checkbox-circle"><input type="checkbox" /> <span>✓</span></label>
+          <label class="checkbox-circle" title="Mark Complete"><input type="checkbox" /> <span>✓</span></label>
         </div>
       </div>
     `;
