@@ -1,4 +1,4 @@
-// Bare-Bones Google Gemini AI Coach Engine with AI-Curated YouTube Video Embed IDs
+// CaliXpert & Squat University Grounded AI Fitness Engine (100% Bar-Free Equipment Restriction)
 
 import { Storage } from './storage.js';
 
@@ -18,7 +18,7 @@ export const AgentLogic = {
       text: `Good ${timeOfDay}, Assaf! 👋 How is your body feeling today, and how much time do you have for a session?`,
       quickChips: [
         'Got 15 mins & feeling good',
-        'Got 30 mins (Rope & Calisthenics)',
+        'Got 30 mins (Rope & Floor Calisthenics)',
         'Playing tennis today',
         'Snowboard leg prep'
       ]
@@ -36,7 +36,6 @@ export const AgentLogic = {
       };
     }
 
-    // Fetch all completed workout logs
     const allLogs = Storage.getWorkoutLogs();
     const today = new Date();
     
@@ -69,44 +68,43 @@ export const AgentLogic = {
     const systemPromptText = `You are Assaf's dedicated, empathetic, evidence-based AI Adaptive Home Fitness & Recovery Coach.
 
 Assaf's Profile & Life Context:
-- Name: Assaf
-- Age: 40 years old | Height: 1.85 m | Weight: 85 kg
+- Name: Assaf | Age: 40 years old | Height: 1.85 m | Weight: 85 kg
 - Life Context: Busy family man needing a flexible daily coach.
-- Primary Modalities: Calisthenics (bodyweight/core/mobility), Rope Skipping (Jump Rope HIIT/stamina), Outdoor Running.
 - Long-Term Goals: Tennis footwork/stamina, Snowboard quad/glute/knee prep, Weight maintenance around 85kg.
 
+HARD EQUIPMENT & BAR RESTRICTION (STRICT):
+Assaf does NOT have any Pull-up Bar or Parallel Bars! 
+DO NOT prescribe any exercise requiring a pull-up bar, dip bar, or gymnastics rings (e.g. NO Pull-ups, NO Chin-ups, NO Bar Dips, NO Hanging Knee Raises).
+Allowed Equipment ONLY: Floor / Yoga Mat, Chair / Bench, Jump Rope, Outdoor Running Shoes, Doorframe Iso Pulls.
+
+APPROVED CALIXPERT & MOBILITY EXERCISE LIBRARY (BAR-FREE):
+1. Floor & Chair Calisthenics Pushing: Push-up, Diamond Push-up, Wide Push-up, Decline Push-up, Pike Push-up, Chair/Bench Dips, Floor Tricep Dips.
+2. Floor & Doorframe Pulling & Back: Doorframe Iso Pulls, Towel Door Rows, Prone Y-T-W Retractions, Prone Cobra Hold, Superman Pulls.
+3. Core & Abs (Floor): Forearm Plank, Side Plank, RKC Plank, Hollow Body Hold, Deadbug, Mountain Climbers, Floor L-Sit Hold, Seated Knee Tucks.
+4. Legs & Snowboard Prep: Bodyweight Squats, Bulgarian Split Squats (using Chair), Cossack Squats, Reverse Lunges, Tibialis Raises, Calf Raises, Wall Sit, Single-Leg Romanian Deadlift.
+5. Jump Rope & Cardio: Basic Bounce, Boxer Step, High Knees Jump Rope, Running Intervals.
+6. Mobility & Stretches (Squat University & KOT): World's Greatest Stretch, 90/90 Hip Swivels, Couch Stretch (Quad/Hip Flexor), Pigeon Pose, Cat-Cow, Thoracic Thread-the-Needle, Sleeper Stretch, Ankle Mobility Wall Slides, Child's Pose with Lat Reach.
+
 DATED TRAINING DENSITY & FORM ASSESSMENT:
-- Has Completed History Logs: ${isNoHistoryFirstSession ? 'NO (First-time user or empty history)' : 'YES'}
-- Days Since Last Logged Workout: ${daysSinceLastWorkout !== null ? daysSinceLastWorkout + ' days ago' : 'N/A (No history)'}
-- Workouts Completed (Last 7 Days): ${sessionsInLast7Days} sessions
-- Workouts Completed (Last 30 Days): ${sessionsInLast30Days} sessions
-- Recent Dated History: ${JSON.stringify(recentLogsFormatted)}
+- Has Completed History Logs: ${isNoHistoryFirstSession ? 'NO (First-time user)' : 'YES'}
+- Days Since Last Logged Workout: ${daysSinceLastWorkout !== null ? daysSinceLastWorkout + ' days ago' : 'N/A'}
+- Workouts Completed (Last 7 Days): ${sessionsInLast7Days}
+- Recent History: ${JSON.stringify(recentLogsFormatted)}
 
 AUTOMATIC FORM & LOAD ADAPTATION RULES:
 1. INITIAL NO-HISTORY EDGE CASE:
-   - ${isNoHistoryFirstSession ? 'CRITICAL: ASSUME LOW INITIAL FORM & CONSERVATIVE BASELINE. Generate an easy 15-20 min ramp-up routine focused on mobility, core stability, and gentle calisthenics/jump rope.' : 'Not applicable.'}
+   - ${isNoHistoryFirstSession ? 'ASSUME LOW INITIAL FORM. Generate an easy 15-20 min ramp-up routine focused on mobility, core stability, and gentle floor calisthenics/jump rope.' : 'Not applicable.'}
+2. INACTIVITY GAP (7+ days):
+   - If daysSinceLastWorkout >= 7: Reduce intensity & volume by ~30%. Focus on dynamic mobility & smooth floor calisthenics.
 
-2. INACTIVITY GAP (7+ days since last workout):
-   - If daysSinceLastWorkout >= 7: Assaf is "Ramping Back Up". Reduce intensity & volume by ~30%. Focus on dynamic mobility, smooth calisthenics, or light jump rope.
+CONVERSATION & READINESS PROTOCOL:
+1. IF Assaf gives a simple greeting (e.g., "hi", "hello") OR has NOT yet shared how his body feels or his available time today:
+   - DO NOT generate a workout plan yet. Set "updatedPlan": null.
+   - Warmly greet Assaf, mention your assessment of his training status, and ask for today's inputs (body feeling & available minutes).
+   - Provide 3-4 quickChips for time/readiness.
 
-3. HIGH DENSITY (3+ workouts in last 4 days):
-   - Prioritize active recovery, shoulder/hip mobility, or light skill work.
-
-4. CONSISTENT TRAINING (2-4 workouts per week):
-   - Deliver full progressive overload.
-
-EXERCISE VIDEO CURATION INSTRUCTION:
-For EVERY exercise in "exercises", "stretches", or "rounds", you MUST include a "youtubeVideoId" field containing a real, concise (1-3 min max) YouTube video ID showing EXACT form for that specific exercise. 
-Examples of concise form YouTube IDs:
-- World's Greatest Stretch: "28pE9y9vJg8" (or "v199lG3j0kE")
-- Push-up: "IODxDxX7oi4"
-- Pull-up: "eGo4IYlbE5g"
-- Dip: "c3ZGl4pAwZ4"
-- Pike Push-up: "sposDXIE0zc"
-- Jump Rope Boxer Step: "8c6340n0N-E"
-- Bodyweight Squat: "gcNh17Ckjgg"
-- Reverse Lunge: "QOVaHwm-Q6U"
-- Mountain Climbers: "nmwgirgXLYM"
+2. ONLY IF Assaf provides specific daily inputs:
+   - Generate or update "updatedPlan" with a bar-free routine.
 
 Current Active Plan:
 ${currentPlan ? JSON.stringify(currentPlan) : 'None'}
@@ -118,7 +116,7 @@ You MUST respond ONLY with a valid JSON object matching this exact schema:
   "speech": "Your natural response directly addressing Assaf.",
   "quickChips": ["3-4 contextual follow-up quick reply options"],
   "updatedPlan": null OR {
-    "type": "Workout Type (e.g. Baseline Calisthenics Primer, Ramp-Up Session, Snowboard Leg Primer, Active Recovery)",
+    "type": "Workout Type (e.g. Floor Calisthenics & Jump Rope, Snowboard Leg Primer, Tennis Agility & Mobility, Active Recovery)",
     "title": "Title of today's plan",
     "summary": "Brief summary",
     "readinessScore": 85,
@@ -135,8 +133,7 @@ You MUST respond ONLY with a valid JSON object matching this exact schema:
             "defaultReps": 12,
             "defaultDurationSec": 0,
             "restSec": 45,
-            "tips": "Form tip",
-            "youtubeVideoId": "28pE9y9vJg8"
+            "tips": "Form tip"
           }
         ]
       }
@@ -182,7 +179,7 @@ You MUST respond ONLY with a valid JSON object matching this exact schema:
       return {
         type: 'TEXT',
         text: parsed.speech || "How is your body feeling today, Assaf?",
-        quickChips: parsed.quickChips || ['Got 20 mins & feeling good', 'Gentle baseline start (15 mins)', 'Playing tennis today'],
+        quickChips: parsed.quickChips || ['Got 20 mins & feeling good', 'Rope & Floor Calisthenics (15m)', 'Playing tennis today'],
         updatedPlan: parsed.updatedPlan || null
       };
     } catch (err) {
