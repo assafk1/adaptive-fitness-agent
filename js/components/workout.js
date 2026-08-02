@@ -1,59 +1,57 @@
-// Interactive Workout, Rest Timer, and CaliXpert + Squat University Visual Form Cards
+// Interactive Workout, Rest Timer, and CaliXpert + Squat University YouTube Video Guides
 
-const EXERCISE_FORM_CARDS = {
-  // PUSHING
-  'push-up': { muscle: 'Chest & Triceps', cues: ['Hands slightly wider than shoulders, core tight', 'Lower chest 1 inch from floor with elbows at 45°', 'Avoid sagging hips or flaring elbows'] },
-  'diamond push-up': { muscle: 'Triceps & Inner Chest', cues: ['Index fingers and thumbs touch forming a diamond', 'Lower chest to hands keeping elbows tucked', 'Engage core to prevent lower back arching'] },
-  'pike push-up': { muscle: 'Shoulders & Upper Chest', cues: ['Hips high in upside-down V position', 'Lower top of head forward toward floor', 'Press back up through shoulders'] },
-  'dip': { muscle: 'Triceps & Lower Chest', cues: ['Hands on edge of chair/bench, feet extended', 'Lower hips until elbows reach 90 degrees', 'Keep chest open and shoulders down'] },
+const CALIXPERT_AND_SQUATUNI_VIDEOS = {
+  // CALIXPERT CALISTHENICS VIDEOS (BAR-FREE)
+  'push-up': { videoId: 'IODxDxX7oi4', channel: 'CaliXpert' },
+  'diamond push-up': { videoId: '_2M2gTq3fGY', channel: 'CaliXpert' },
+  'pike push-up': { videoId: 'sposDXIE0zc', channel: 'CaliXpert' },
+  'decline push-up': { videoId: 'B-AobTxlAig', channel: 'CaliXpert' },
+  'chair dip': { videoId: '0326dy_-CzM', channel: 'CaliXpert' },
+  'bench dip': { videoId: '0326dy_-CzM', channel: 'CaliXpert' },
+  'floor tricep dip': { videoId: '0326dy_-CzM', channel: 'CaliXpert' },
+  
+  // CORE & ABS (CALIXPERT)
+  'forearm plank': { videoId: 'pSHjTRCQxIw', channel: 'CaliXpert' },
+  'plank': { videoId: 'pSHjTRCQxIw', channel: 'CaliXpert' },
+  'side plank': { videoId: 'N_4lYnLyo5c', channel: 'CaliXpert' },
+  'deadbug': { videoId: '4XLEnwUr1d8', channel: 'CaliXpert' },
+  'hollow body': { videoId: '44ScXWFaVBs', channel: 'CaliXpert' },
+  'mountain climber': { videoId: 'nmwgirgXLYM', channel: 'CaliXpert' },
 
-  // PULLING & BACK (BAR-FREE)
-  'doorframe iso pull': { muscle: 'Lats & Upper Back', cues: ['Grasp sturdy doorframe at chest height', 'Lean back with arms straight, then pull chest to frame', 'Squeeze shoulder blades together at top'] },
-  'prone y-t-w': { muscle: 'Upper Back & Rear Delts', cues: ['Lie face down on floor with arms in Y, T, and W shapes', 'Raise arms up squeezing shoulder blades for 2s', 'Keep neck neutral looking down at mat'] },
-  'cobra hold': { muscle: 'Spinal Erectors & Glutes', cues: ['Lie face down, lift chest and hands off floor', 'Keep toes touching mat and squeeze glutes', 'Hold for prescribed duration Breathing smoothly'] },
+  // LEGS & SNOWBOARD PREP (CALIXPERT)
+  'squat': { videoId: 'gcNh17Ckjgg', channel: 'CaliXpert' },
+  'bulgarian split squat': { videoId: '2C-uNgKwPLE', channel: 'CaliXpert' },
+  'cossack squat': { videoId: '1-EUvBto8lE', channel: 'CaliXpert' },
+  'lunge': { videoId: 'QOVaHwm-Q6U', channel: 'CaliXpert' },
+  'reverse lunge': { videoId: 'QOVaHwm-Q6U', channel: 'CaliXpert' },
+  'wall sit': { videoId: 'y-wV4Venusw', channel: 'CaliXpert' },
+  'single-leg rdl': { videoId: 'QW_uGfSj99k', channel: 'CaliXpert' },
+  'calf raise': { videoId: '-M4-G8p8fmc', channel: 'CaliXpert' },
 
-  // CORE & ABS (FLOOR)
-  'forearm plank': { muscle: 'Core & Abs', cues: ['Elbows directly under shoulders, forearms parallel', 'Squeeze glutes and brace abs in straight line', 'Don\'t let hips sag or pike high'] },
-  'side plank': { muscle: 'Obliques & Lateral Core', cues: ['Elbow under shoulder, stack feet or stagger', 'Lift hips high creating straight diagonal line', 'Brace core and avoid letting top hip rotate back'] },
-  'deadbug': { muscle: 'Deep Core & Stability', cues: ['Lie on back, arms up, knees at 90 degrees', 'Extend opposite arm and leg toward floor slowly', 'Keep lower back pressed flat into mat'] },
-  'hollow body': { muscle: 'Entire Abdominal Wall', cues: ['Lie back, press lower back to floor, lift shoulders and legs', 'Reach arms overhead or by sides', 'Hold rigid banana shape'] },
+  // ROPE SKIPPING (CALIXPERT)
+  'jump rope': { videoId: 'P56_C33f678', channel: 'CaliXpert' },
+  'boxer step': { videoId: '8c6340n0N-E', channel: 'CaliXpert' },
 
-  // LEGS & SNOWBOARD PREP
-  'squat': { muscle: 'Quads & Glutes', cues: ['Feet shoulder-width, toes slightly out', 'Sit back into hips keeping knees tracking over toes', 'Keep chest upright and push through mid-foot'] },
-  'bulgarian split squat': { muscle: 'Single-Leg Quads & Glutes', cues: ['Rear foot elevated on chair, front foot 3ft forward', 'Lower back knee toward floor vertically', 'Keep front heel planted firmly'] },
-  'cossack squat': { muscle: 'Adductors & Ankle Mobility', cues: ['Wide stance, shift weight to one side bending knee deep', 'Straight leg heel stays planted with toes pointing up', 'Keep chest high'] },
-  'reverse lunge': { muscle: 'Glutes & Hamstrings', cues: ['Step backward smoothly onto ball of foot', 'Lower hips until front thigh is parallel to floor', 'Push off front foot to return to standing'] },
-  'wall sit': { muscle: 'Quad Endurance (Snowboard Prep)', cues: ['Back flat against wall, knees bent at 90 degrees', 'Keep thighs parallel to floor and heels flat', 'Hold position bracing core'] },
-  'single-leg rdl': { muscle: 'Hamstrings & Glute Balance', cues: ['Hinge at hips extending one leg backward straight', 'Keep back flat and hips square to floor', 'Squeeze glute to return to standing'] },
-
-  // JUMP ROPE & CARDIO
-  'jump rope': { muscle: 'Calves, Footwork & Cardio', cues: ['Stay light on balls of feet, knees soft', 'Rotate rope from wrists, keep elbows close', 'Jump only 1-2 inches off floor'] },
-  'boxer step': { muscle: 'Ankle Stamina & Tennis Agility', cues: ['Shift weight smoothly from foot to foot with each turn', 'Keep jumps tiny and rhythm relaxed', 'Maintain soft knees'] },
-
-  // MOBILITY & STRETCHES (SQUAT UNIVERSITY & KOT)
-  "world's greatest stretch": { muscle: 'Hips, Thoracic Spine & Hamstrings', cues: ['Deep lunge, place inside hand on floor', 'Rotate inside arm up to sky opening chest', 'Hold 3s, return, and stretch front hamstring'] },
-  '90/90 hip': { muscle: 'Hip Internal & External Rotation', cues: ['Sit on floor with both knees bent at 90 degrees', 'Rotate hips side to side keeping chest tall', 'Hinge forward over front shin for deep stretch'] },
-  'couch stretch': { muscle: 'Quads & Hip Flexors', cues: ['Rear shin vertical against wall, front foot in lunge', 'Squeeze glute on rear leg to feel deep quad stretch', 'Keep torso upright'] },
-  'pigeon pose': { muscle: 'Glutes & Piriformis', cues: ['Front leg folded across mat at 90/45 degrees', 'Rear leg extended straight behind hips', 'Hinge torso forward over front leg'] },
-  'cat-cow': { muscle: 'Spinal Mobility', cues: ['On all fours, arch back up to ceiling (Cat)', 'Dip belly to floor lifting chest & tailbone (Cow)', 'Move slowly with breath'] },
-  'thoracic thread': { muscle: 'Mid-Back Mobility (Tennis Rotations)', cues: ['On all fours, reach one arm under body to floor', 'Unwind and reach arm to sky opening chest', 'Follow hand with eyes'] }
+  // STRETCHES & MOBILITY (SQUAT UNIVERSITY & KOT GUY)
+  "world's greatest stretch": { videoId: '28pE9y9vJg8', channel: 'Squat University' },
+  'greatest stretch': { videoId: '28pE9y9vJg8', channel: 'Squat University' },
+  '90/90 hip': { videoId: '_WvVv_13W-0', channel: 'Squat University' },
+  'couch stretch': { videoId: '80w3iW12M9g', channel: 'Knees Over Toes' },
+  'pigeon pose': { videoId: 'cWl2sCjK9lQ', channel: 'Squat University' },
+  'cat-cow': { videoId: 'w_UKcI1gTn8', channel: 'Squat University' },
+  'thoracic thread': { videoId: '_V-QJvQ99p4', channel: 'Squat University' },
+  'sleeper stretch': { videoId: 'G1N4yM-7rZc', channel: 'Squat University' },
+  'ankle mobility': { videoId: 'e4W7-M6Tz0c', channel: 'Squat University' },
+  "child's pose": { videoId: 'm9VwH8qMhO8', channel: 'Squat University' }
 };
 
 export const WorkoutComponent = {
-  getFormCard(exerciseName = '') {
+  getVideoInfo(exerciseName = '') {
     const lower = exerciseName.toLowerCase();
-    for (const key in EXERCISE_FORM_CARDS) {
-      if (lower.includes(key)) return { name: exerciseName, ...EXERCISE_FORM_CARDS[key] };
+    for (const key in CALIXPERT_AND_SQUATUNI_VIDEOS) {
+      if (lower.includes(key)) return { name: exerciseName, ...CALIXPERT_AND_SQUATUNI_VIDEOS[key] };
     }
-    return {
-      name: exerciseName,
-      muscle: 'Targeted Movement',
-      cues: [
-        'Maintain controlled tempo and steady breathing',
-        'Brace core and protect lower back throughout movement',
-        'Focus on full range of motion without rushing'
-      ]
-    };
+    return { name: exerciseName, videoId: null, channel: 'YouTube' };
   },
 
   renderWorkoutCard(containerEl, plan, onComplete) {
@@ -104,7 +102,7 @@ export const WorkoutComponent = {
 
         <div class="workout-meta-bar">
           <span>⏱️ ${estimatedMinutes || 15} Minutes</span>
-          <span>🔥 100% Bar-Free</span>
+          <span>🎥 CaliXpert & SquatUni Videos</span>
           <button class="btn btn-outline btn-sm" id="launch-timer-btn">⏱️ Rest Timer</button>
         </div>
 
@@ -133,11 +131,11 @@ export const WorkoutComponent = {
       timerBtn.addEventListener('click', () => this.renderTimerModal(60));
     }
 
-    // Form Card listeners
-    containerEl.querySelectorAll('.view-form-card-btn').forEach(btn => {
+    // Video Guide listeners
+    containerEl.querySelectorAll('.watch-video-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const exName = e.currentTarget.dataset.name;
-        this.renderFormCardModal(exName);
+        this.renderVideoModal(exName);
       });
     });
 
@@ -166,7 +164,7 @@ export const WorkoutComponent = {
         <div class="exercise-info">
           <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
             <span class="exercise-name" style="font-size: 15px;">${ex.name}</span>
-            <button class="btn btn-outline btn-sm view-form-card-btn" data-name="${ex.name}" style="padding: 2px 8px; font-size: 11px;">🖼️ Form Card</button>
+            <button class="btn btn-outline btn-sm watch-video-btn" data-name="${ex.name}" style="padding: 2px 8px; font-size: 11px;">🎥 Watch Video</button>
           </div>
           <span class="exercise-meta">${ex.defaultSets ? ex.defaultSets + ' Sets x ' : ''}${ex.defaultReps ? ex.defaultReps + ' Reps' : (ex.defaultDurationSec ? Math.round(ex.defaultDurationSec / 60) + ' min hold' : '')}</span>
           <p class="exercise-tips">${ex.tips || ''}</p>
@@ -184,7 +182,7 @@ export const WorkoutComponent = {
         <div class="exercise-info">
           <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
             <span class="exercise-name" style="font-size: 15px;">🧘 ${st.name}</span>
-            <button class="btn btn-outline btn-sm view-form-card-btn" data-name="${st.name}" style="padding: 2px 8px; font-size: 11px;">🖼️ Form Card</button>
+            <button class="btn btn-outline btn-sm watch-video-btn" data-name="${st.name}" style="padding: 2px 8px; font-size: 11px;">🎥 Watch Video</button>
           </div>
           <span class="exercise-meta">${st.durationSec}s ${st.perSide ? 'per side' : 'hold'}</span>
           <p class="exercise-tips">${st.tips || ''}</p>
@@ -202,7 +200,7 @@ export const WorkoutComponent = {
         <div class="exercise-info">
           <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
             <span class="exercise-name" style="font-size: 15px;">⚡ ${rd.name}</span>
-            <button class="btn btn-outline btn-sm view-form-card-btn" data-name="${rd.name}" style="padding: 2px 8px; font-size: 11px;">🖼️ Form Card</button>
+            <button class="btn btn-outline btn-sm watch-video-btn" data-name="${rd.name}" style="padding: 2px 8px; font-size: 11px;">🎥 Watch Video</button>
           </div>
           <span class="exercise-meta">${rd.durationSec}s Work | ${rd.restSec || 0}s Rest</span>
           <p class="exercise-tips">${rd.tips || ''}</p>
@@ -226,41 +224,59 @@ export const WorkoutComponent = {
     `;
   },
 
-  renderFormCardModal(exerciseName) {
-    let modal = document.getElementById('form-card-modal');
+  renderVideoModal(exerciseName) {
+    let modal = document.getElementById('video-guide-modal');
     if (!modal) {
       const modalEl = document.createElement('div');
-      modalEl.id = 'form-card-modal';
+      modalEl.id = 'video-guide-modal';
       modalEl.className = 'modal-overlay';
       document.body.appendChild(modalEl);
       modal = modalEl;
     }
 
-    const cardData = this.getFormCard(exerciseName);
+    const info = this.getVideoInfo(exerciseName);
+    const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(exerciseName + ' form tutorial ' + info.channel)}`;
+
+    let videoContentHtml = '';
+    if (info.videoId) {
+      videoContentHtml = `
+        <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: var(--radius-sm); margin-bottom: 12px;">
+          <iframe 
+            src="https://www.youtube.com/embed/${info.videoId}?autoplay=1" 
+            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" 
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+            allowfullscreen>
+          </iframe>
+        </div>
+      `;
+    } else {
+      videoContentHtml = `
+        <div style="text-align: center; padding: 24px 12px; background: rgba(255,255,255,0.04); border-radius: var(--radius-sm); margin-bottom: 12px;">
+          <p style="margin-bottom: 12px;">Watch high-quality technique video on YouTube for <strong>${exerciseName}</strong>:</p>
+          <a href="${searchUrl}" target="_blank" class="btn btn-primary btn-block">🎥 Search Video Guide on YouTube</a>
+        </div>
+      `;
+    }
 
     modal.innerHTML = `
-      <div class="modal-card glassmorphism animate-fade-in" style="max-width: 480px; padding: 20px;">
+      <div class="modal-card glassmorphism animate-fade-in" style="max-width: 500px;">
         <div class="modal-header">
           <div>
-            <span class="badge badge-primary">${cardData.muscle}</span>
-            <h3 style="margin-top: 4px;">🖼️ ${cardData.name}</h3>
+            <span class="badge badge-primary">${info.channel} Guide</span>
+            <h3 style="margin-top: 4px;">🎥 ${exerciseName}</h3>
           </div>
-          <button class="btn-icon" id="close-card-btn">&times;</button>
+          <button class="btn-icon" id="close-video-btn">&times;</button>
         </div>
-
-        <div style="background: rgba(255,255,255,0.04); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 16px; border: 1px solid var(--border-glass);">
-          <h4 style="font-size: 13px; color: var(--accent-primary); text-transform: uppercase; margin-bottom: 8px;">💡 Form & Execution Cues</h4>
-          <ul style="padding-left: 18px; font-size: 13px; line-height: 1.6; color: var(--text-primary);">
-            ${cardData.cues.map(c => `<li style="margin-bottom: 6px;">${c}</li>`).join('')}
-          </ul>
+        ${videoContentHtml}
+        <div style="display: flex; gap: 8px;">
+          <a href="${searchUrl}" target="_blank" class="btn btn-outline btn-sm btn-block">🔎 Open in YouTube App</a>
+          <button class="btn btn-primary btn-sm btn-block" id="done-video-btn">Done</button>
         </div>
-
-        <button class="btn btn-primary btn-block" id="done-card-btn">Got It!</button>
       </div>
     `;
 
-    const closeBtn = document.getElementById('close-card-btn');
-    const doneBtn = document.getElementById('done-card-btn');
+    const closeBtn = document.getElementById('close-video-btn');
+    const doneBtn = document.getElementById('done-video-btn');
 
     const closeModal = () => modal.remove();
     closeBtn.addEventListener('click', closeModal);
