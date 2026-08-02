@@ -1,4 +1,4 @@
-// Bare-Bones Google Gemini AI Coach Engine with No-History Low Form Edge Case
+// Bare-Bones Google Gemini AI Coach Engine with AI-Curated YouTube Video Embed IDs
 
 import { Storage } from './storage.js';
 
@@ -83,26 +83,30 @@ DATED TRAINING DENSITY & FORM ASSESSMENT:
 - Recent Dated History: ${JSON.stringify(recentLogsFormatted)}
 
 AUTOMATIC FORM & LOAD ADAPTATION RULES:
-1. INITIAL NO-HISTORY EDGE CASE (First session / empty history):
-   - ${isNoHistoryFirstSession ? 'CRITICAL: ASSUME LOW INITIAL FORM & CONSERVATIVE BASELINE. Generate an easy 15-20 min ramp-up routine focused on mobility, core stability, and gentle calisthenics/jump rope. Explicitly state in "speech": "Welcome Assaf! Since this is our first logged session together, we are starting with a gentle baseline routine to assess your form and protect your joints."' : 'Not applicable.'}
+1. INITIAL NO-HISTORY EDGE CASE:
+   - ${isNoHistoryFirstSession ? 'CRITICAL: ASSUME LOW INITIAL FORM & CONSERVATIVE BASELINE. Generate an easy 15-20 min ramp-up routine focused on mobility, core stability, and gentle calisthenics/jump rope.' : 'Not applicable.'}
 
 2. INACTIVITY GAP (7+ days since last workout):
-   - If daysSinceLastWorkout >= 7: Assaf is "Ramping Back Up". Reduce intensity & volume by ~30%. Focus on dynamic mobility, smooth calisthenics, or light jump rope. Mention in "speech": "Since it has been ${daysSinceLastWorkout} days since your last session, today we are easing back in to protect your joints and prevent injury."
+   - If daysSinceLastWorkout >= 7: Assaf is "Ramping Back Up". Reduce intensity & volume by ~30%. Focus on dynamic mobility, smooth calisthenics, or light jump rope.
 
 3. HIGH DENSITY (3+ workouts in last 4 days):
    - Prioritize active recovery, shoulder/hip mobility, or light skill work.
 
 4. CONSISTENT TRAINING (2-4 workouts per week):
-   - Deliver full progressive overload tailored to tennis & snowboard goals.
+   - Deliver full progressive overload.
 
-CONVERSATION & READINESS PROTOCOL:
-1. IF Assaf gives a simple greeting (e.g., "hi", "hello") OR has NOT yet shared how his body feels or his available time today:
-   - DO NOT generate a workout plan yet. Set "updatedPlan": null.
-   - Warmly greet Assaf, mention your assessment of his training status (e.g. first session baseline or days break), and ask for today's inputs (body feeling & available minutes).
-   - Provide 3-4 quickChips for time/readiness.
-
-2. ONLY IF Assaf provides specific daily inputs:
-   - Generate or update "updatedPlan" scaled appropriately for his form assessment.
+EXERCISE VIDEO CURATION INSTRUCTION:
+For EVERY exercise in "exercises", "stretches", or "rounds", you MUST include a "youtubeVideoId" field containing a real, concise (1-3 min max) YouTube video ID showing EXACT form for that specific exercise. 
+Examples of concise form YouTube IDs:
+- World's Greatest Stretch: "28pE9y9vJg8" (or "v199lG3j0kE")
+- Push-up: "IODxDxX7oi4"
+- Pull-up: "eGo4IYlbE5g"
+- Dip: "c3ZGl4pAwZ4"
+- Pike Push-up: "sposDXIE0zc"
+- Jump Rope Boxer Step: "8c6340n0N-E"
+- Bodyweight Squat: "gcNh17Ckjgg"
+- Reverse Lunge: "QOVaHwm-Q6U"
+- Mountain Climbers: "nmwgirgXLYM"
 
 Current Active Plan:
 ${currentPlan ? JSON.stringify(currentPlan) : 'None'}
@@ -111,7 +115,7 @@ User Message: "${messageText}"
 
 You MUST respond ONLY with a valid JSON object matching this exact schema:
 {
-  "speech": "Your natural response directly addressing Assaf, acknowledging his baseline/form status when relevant.",
+  "speech": "Your natural response directly addressing Assaf.",
   "quickChips": ["3-4 contextual follow-up quick reply options"],
   "updatedPlan": null OR {
     "type": "Workout Type (e.g. Baseline Calisthenics Primer, Ramp-Up Session, Snowboard Leg Primer, Active Recovery)",
@@ -131,7 +135,8 @@ You MUST respond ONLY with a valid JSON object matching this exact schema:
             "defaultReps": 12,
             "defaultDurationSec": 0,
             "restSec": 45,
-            "tips": "Form tip"
+            "tips": "Form tip",
+            "youtubeVideoId": "28pE9y9vJg8"
           }
         ]
       }

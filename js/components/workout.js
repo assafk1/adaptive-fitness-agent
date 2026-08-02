@@ -1,30 +1,35 @@
-// Interactive Workout, Rest Timer, and Dynamic Exercise Set Tracker Component
+// Interactive Workout, Rest Timer, and Dynamic AI Video Curation Component
 
-const EXERCISE_VIDEO_MAP = {
-  'push': 'IODxDxX7oi4',
-  'pull': 'eGo4IYlbE5g',
+const CURATED_VERIFIED_VIDEOS = {
+  "world's greatest stretch": '28pE9y9vJg8',
+  'greatest stretch': '28pE9y9vJg8',
+  'push-up': 'IODxDxX7oi4',
+  'push up': 'IODxDxX7oi4',
+  'pull-up': 'eGo4IYlbE5g',
+  'pull up': 'eGo4IYlbE5g',
   'dip': 'c3ZGl4pAwZ4',
   'pike': 'sposDXIE0zc',
   'plank': 'pSHjTRCQxIw',
   'jump rope': 'P56_C33f678',
-  'rope': 'P56_C33f678',
-  'boxer': '8c6340n0N-E',
+  'boxer step': '8c6340n0N-E',
   'squat': 'gcNh17Ckjgg',
   'lunge': 'QOVaHwm-Q6U',
-  'climber': 'nmwgirgXLYM',
+  'mountain climber': 'nmwgirgXLYM',
   'burpee': 'auBLPXO8F6U',
-  'chin': 'brhRXlOhWAM',
-  'hollow': '44ScXWFaVBs',
-  'knee': 'Y25lWfWlYt8',
-  'calf': '-M4-G8p8fmc',
-  'stretch': 'g_tea8ZNk5A'
+  'chin-up': 'brhRXlOhWAM',
+  'hollow hold': '44ScXWFaVBs',
+  'calf raise': '-M4-G8p8fmc'
 };
 
 export const WorkoutComponent = {
-  getVideoId(exerciseName = '') {
+  getVideoId(exerciseObj, exerciseName = '') {
+    if (exerciseObj && exerciseObj.youtubeVideoId) {
+      return exerciseObj.youtubeVideoId;
+    }
+
     const lower = exerciseName.toLowerCase();
-    for (const key in EXERCISE_VIDEO_MAP) {
-      if (lower.includes(key)) return EXERCISE_VIDEO_MAP[key];
+    for (const key in CURATED_VERIFIED_VIDEOS) {
+      if (lower.includes(key)) return CURATED_VERIFIED_VIDEOS[key];
     }
     return null;
   },
@@ -110,7 +115,8 @@ export const WorkoutComponent = {
     containerEl.querySelectorAll('.watch-video-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const exName = e.currentTarget.dataset.name;
-        this.renderVideoModal(exName);
+        const videoId = e.currentTarget.dataset.videoid;
+        this.renderVideoModal(exName, videoId);
       });
     });
 
@@ -131,16 +137,16 @@ export const WorkoutComponent = {
 
   renderExerciseRow(ex) {
     if (!ex) return '';
-    // Dynamically render the exact number of sets prescribed by Gemini (e.g. 2, 3, or 4 sets)
     const totalSets = Math.min(Math.max(parseInt(ex.defaultSets || ex.sets || 3, 10), 1), 6);
     const setsArray = Array.from({ length: totalSets }, (_, i) => i + 1);
+    const videoId = this.getVideoId(ex, ex.name);
 
     return `
       <div class="exercise-item-row" style="padding: 10px 0; border-bottom: 1px solid var(--border-glass);">
         <div class="exercise-info">
           <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
             <span class="exercise-name" style="font-size: 15px;">${ex.name}</span>
-            <button class="btn btn-outline btn-sm watch-video-btn" data-name="${ex.name}" style="padding: 2px 8px; font-size: 11px;">🎥 Watch Form</button>
+            <button class="btn btn-outline btn-sm watch-video-btn" data-name="${ex.name}" data-videoid="${videoId || ''}" style="padding: 2px 8px; font-size: 11px;">🎥 Watch Form</button>
           </div>
           <span class="exercise-meta">${ex.defaultSets ? ex.defaultSets + ' Sets x ' : ''}${ex.defaultReps ? ex.defaultReps + ' Reps' : (ex.defaultDurationSec ? Math.round(ex.defaultDurationSec / 60) + ' min hold' : '')}</span>
           <p class="exercise-tips">${ex.tips || ''}</p>
@@ -153,12 +159,13 @@ export const WorkoutComponent = {
   },
 
   renderStretchRow(st) {
+    const videoId = this.getVideoId(st, st.name);
     return `
       <div class="exercise-item-row" style="padding: 10px 0; border-bottom: 1px solid var(--border-glass);">
         <div class="exercise-info">
           <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
             <span class="exercise-name" style="font-size: 15px;">🧘 ${st.name}</span>
-            <button class="btn btn-outline btn-sm watch-video-btn" data-name="${st.name}" style="padding: 2px 8px; font-size: 11px;">🎥 Watch Form</button>
+            <button class="btn btn-outline btn-sm watch-video-btn" data-name="${st.name}" data-videoid="${videoId || ''}" style="padding: 2px 8px; font-size: 11px;">🎥 Watch Form</button>
           </div>
           <span class="exercise-meta">${st.durationSec}s ${st.perSide ? 'per side' : 'hold'}</span>
           <p class="exercise-tips">${st.tips || ''}</p>
@@ -171,12 +178,13 @@ export const WorkoutComponent = {
   },
 
   renderRoundRow(rd) {
+    const videoId = this.getVideoId(rd, rd.name);
     return `
       <div class="exercise-item-row" style="padding: 10px 0; border-bottom: 1px solid var(--border-glass);">
         <div class="exercise-info">
           <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
             <span class="exercise-name" style="font-size: 15px;">⚡ ${rd.name}</span>
-            <button class="btn btn-outline btn-sm watch-video-btn" data-name="${rd.name}" style="padding: 2px 8px; font-size: 11px;">🎥 Watch Form</button>
+            <button class="btn btn-outline btn-sm watch-video-btn" data-name="${rd.name}" data-videoid="${videoId || ''}" style="padding: 2px 8px; font-size: 11px;">🎥 Watch Form</button>
           </div>
           <span class="exercise-meta">${rd.durationSec}s Work | ${rd.restSec || 0}s Rest</span>
           <p class="exercise-tips">${rd.tips || ''}</p>
@@ -200,7 +208,7 @@ export const WorkoutComponent = {
     `;
   },
 
-  renderVideoModal(exerciseName) {
+  renderVideoModal(exerciseName, videoId = '') {
     let modal = document.getElementById('video-guide-modal');
     if (!modal) {
       const modalEl = document.createElement('div');
@@ -210,8 +218,7 @@ export const WorkoutComponent = {
       modal = modalEl;
     }
 
-    const videoId = this.getVideoId(exerciseName);
-    const searchUrl = `https://www.youtube.com/results?search_query=proper+form+${encodeURIComponent(exerciseName)}`;
+    const searchUrl = `https://www.youtube.com/results?search_query=proper+form+1+min+${encodeURIComponent(exerciseName)}`;
 
     let videoContentHtml = '';
     if (videoId) {
@@ -228,8 +235,8 @@ export const WorkoutComponent = {
     } else {
       videoContentHtml = `
         <div style="text-align: center; padding: 24px 12px; background: rgba(255,255,255,0.04); border-radius: var(--radius-sm); margin-bottom: 12px;">
-          <p style="margin-bottom: 12px;">Tap below to watch verified technique guides on YouTube for <strong>${exerciseName}</strong>:</p>
-          <a href="${searchUrl}" target="_blank" class="btn btn-primary btn-block">🎥 Search Video Guide on YouTube</a>
+          <p style="margin-bottom: 12px;">Tap below to watch concise 1-minute technique guides on YouTube for <strong>${exerciseName}</strong>:</p>
+          <a href="${searchUrl}" target="_blank" class="btn btn-primary btn-block">🎥 Search Concise Video Guide on YouTube</a>
         </div>
       `;
     }
