@@ -1,9 +1,37 @@
-// Interactive Workout & Rest Timer Component
+// Interactive Workout, Rest Timer, and Exercise Video Demonstration Component
+
+const EXERCISE_VIDEO_MAP = {
+  'push': 'IODxDxX7oi4',
+  'pull': 'eGo4IYlbE5g',
+  'dip': 'c3ZGl4pAwZ4',
+  'pike': 'sposDXIE0zc',
+  'plank': 'pSHjTRCQxIw',
+  'jump rope': 'P56_C33f678',
+  'rope': 'P56_C33f678',
+  'boxer': '8c6340n0N-E',
+  'squat': 'gcNh17Ckjgg',
+  'lunge': 'QOVaHwm-Q6U',
+  'climber': 'nmwgirgXLYM',
+  'burpee': 'auBLPXO8F6U',
+  'chin': 'brhRXlOhWAM',
+  'hollow': '44ScXWFaVBs',
+  'knee': 'Y25lWfWlYt8',
+  'calf': '-M4-G8p8fmc',
+  'stretch': 'g_tea8ZNk5A'
+};
 
 export const WorkoutComponent = {
+  getVideoId(exerciseName = '') {
+    const lower = exerciseName.toLowerCase();
+    for (const key in EXERCISE_VIDEO_MAP) {
+      if (lower.includes(key)) return EXERCISE_VIDEO_MAP[key];
+    }
+    return null;
+  },
+
   renderWorkoutCard(containerEl, plan, onComplete) {
     if (!plan) {
-      containerEl.innerHTML = `<div class="empty-card glassmorphism"><p>No plan active yet today. Tap <strong>⚡ Start Daily Check-in</strong> to generate today's adaptive routine.</p></div>`;
+      containerEl.innerHTML = `<div class="empty-card glassmorphism"><p>No plan active yet today. Chat with your coach to generate today's adaptive routine.</p></div>`;
       return;
     }
 
@@ -31,17 +59,6 @@ export const WorkoutComponent = {
           ${plan.exercises.map(ex => this.renderExerciseRow(ex)).join('')}
         </div>
       `;
-    } else if (plan.components) {
-      const { mainComponent, cardioComponent, mobilityComponent } = plan.components;
-      if (mainComponent && mainComponent.exercises) {
-        exercisesHtml += `<div class="routine-block"><h4>💪 ${mainComponent.title}</h4>${mainComponent.exercises.map(ex => this.renderExerciseRow(ex)).join('')}</div>`;
-      }
-      if (cardioComponent) {
-        exercisesHtml += `<div class="routine-block"><h4>🏃 ${cardioComponent.name}</h4><p class="text-muted">${cardioComponent.description || ''}</p></div>`;
-      }
-      if (mobilityComponent) {
-        exercisesHtml += `<div class="routine-block"><h4>🧘 ${mobilityComponent.name}</h4><p class="text-muted">${mobilityComponent.description || ''}</p></div>`;
-      }
     }
 
     const html = `
@@ -61,7 +78,7 @@ export const WorkoutComponent = {
         <div class="workout-meta-bar">
           <span>⏱️ ${estimatedMinutes || 15} Minutes</span>
           <span>🔥 Gemini AI Tailored</span>
-          <button class="btn btn-outline btn-sm" id="launch-timer-btn">⏱️ Open Rest Timer</button>
+          <button class="btn btn-outline btn-sm" id="launch-timer-btn">⏱️ Rest Timer</button>
         </div>
 
         ${aiAdvice ? `
@@ -76,7 +93,7 @@ export const WorkoutComponent = {
         </div>
 
         <div class="workout-actions" style="margin-top: 20px;">
-          <button class="btn btn-success btn-block btn-lg" id="complete-workout-btn">✅ Log Session Completed</button>
+          <button class="btn btn-primary btn-block btn-lg" id="complete-workout-btn">✅ Log Session Completed</button>
         </div>
       </div>
     `;
@@ -89,6 +106,14 @@ export const WorkoutComponent = {
       timerBtn.addEventListener('click', () => this.renderTimerModal(60));
     }
 
+    // Video Guide listeners
+    containerEl.querySelectorAll('.watch-video-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const exName = e.currentTarget.dataset.name;
+        this.renderVideoModal(exName);
+      });
+    });
+
     // Complete listener
     const completeBtn = document.getElementById('complete-workout-btn');
     if (completeBtn) {
@@ -99,7 +124,7 @@ export const WorkoutComponent = {
           durationMin: estimatedMinutes || 15,
           readinessScore: readinessScore || 85
         });
-        alert('🎉 Great work! Session logged to your progress dashboard.');
+        alert('🎉 Great work! Session logged to your progress history.');
       });
     }
   },
@@ -109,7 +134,10 @@ export const WorkoutComponent = {
     return `
       <div class="exercise-item-row" style="padding: 10px 0; border-bottom: 1px solid var(--border-glass);">
         <div class="exercise-info">
-          <span class="exercise-name" style="font-size: 15px;">${ex.name}</span>
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <span class="exercise-name" style="font-size: 15px;">${ex.name}</span>
+            <button class="btn btn-outline btn-sm watch-video-btn" data-name="${ex.name}" style="padding: 2px 8px; font-size: 11px;">🎥 Watch Form</button>
+          </div>
           <span class="exercise-meta">${ex.defaultSets ? ex.defaultSets + ' Sets x ' : ''}${ex.defaultReps ? ex.defaultReps + ' Reps' : (ex.defaultDurationSec ? Math.round(ex.defaultDurationSec / 60) + ' min hold' : '')}</span>
           <p class="exercise-tips">${ex.tips || ''}</p>
         </div>
@@ -124,7 +152,10 @@ export const WorkoutComponent = {
     return `
       <div class="exercise-item-row" style="padding: 10px 0; border-bottom: 1px solid var(--border-glass);">
         <div class="exercise-info">
-          <span class="exercise-name" style="font-size: 15px;">🧘 ${st.name}</span>
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <span class="exercise-name" style="font-size: 15px;">🧘 ${st.name}</span>
+            <button class="btn btn-outline btn-sm watch-video-btn" data-name="${st.name}" style="padding: 2px 8px; font-size: 11px;">🎥 Watch Form</button>
+          </div>
           <span class="exercise-meta">${st.durationSec}s ${st.perSide ? 'per side' : 'hold'}</span>
           <p class="exercise-tips">${st.tips || ''}</p>
         </div>
@@ -139,7 +170,10 @@ export const WorkoutComponent = {
     return `
       <div class="exercise-item-row" style="padding: 10px 0; border-bottom: 1px solid var(--border-glass);">
         <div class="exercise-info">
-          <span class="exercise-name" style="font-size: 15px;">⚡ ${rd.name}</span>
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <span class="exercise-name" style="font-size: 15px;">⚡ ${rd.name}</span>
+            <button class="btn btn-outline btn-sm watch-video-btn" data-name="${rd.name}" style="padding: 2px 8px; font-size: 11px;">🎥 Watch Form</button>
+          </div>
           <span class="exercise-meta">${rd.durationSec}s Work | ${rd.restSec || 0}s Rest</span>
           <p class="exercise-tips">${rd.tips || ''}</p>
         </div>
@@ -160,6 +194,62 @@ export const WorkoutComponent = {
         </div>
       </div>
     `;
+  },
+
+  renderVideoModal(exerciseName) {
+    let modal = document.getElementById('video-guide-modal');
+    if (!modal) {
+      const modalEl = document.createElement('div');
+      modalEl.id = 'video-guide-modal';
+      modalEl.className = 'modal-overlay';
+      document.body.appendChild(modalEl);
+      modal = modalEl;
+    }
+
+    const videoId = this.getVideoId(exerciseName);
+    const searchUrl = `https://www.youtube.com/results?search_query=proper+form+${encodeURIComponent(exerciseName)}`;
+
+    let videoContentHtml = '';
+    if (videoId) {
+      videoContentHtml = `
+        <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: var(--radius-sm); margin-bottom: 12px;">
+          <iframe 
+            src="https://www.youtube.com/embed/${videoId}?autoplay=1" 
+            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" 
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+            allowfullscreen>
+          </iframe>
+        </div>
+      `;
+    } else {
+      videoContentHtml = `
+        <div style="text-align: center; padding: 24px 12px; background: rgba(255,255,255,0.04); border-radius: var(--radius-sm); margin-bottom: 12px;">
+          <p style="margin-bottom: 12px;">Tap below to watch verified technique guides on YouTube for <strong>${exerciseName}</strong>:</p>
+          <a href="${searchUrl}" target="_blank" class="btn btn-primary btn-block">🎥 Search Video Guide on YouTube</a>
+        </div>
+      `;
+    }
+
+    modal.innerHTML = `
+      <div class="modal-card glassmorphism animate-fade-in" style="max-width: 500px;">
+        <div class="modal-header">
+          <h3>🎥 ${exerciseName} - Technique Guide</h3>
+          <button class="btn-icon" id="close-video-btn">&times;</button>
+        </div>
+        ${videoContentHtml}
+        <div style="display: flex; gap: 8px;">
+          <a href="${searchUrl}" target="_blank" class="btn btn-outline btn-sm btn-block">🔎 Open in YouTube App</a>
+          <button class="btn btn-primary btn-sm btn-block" id="done-video-btn">Done</button>
+        </div>
+      </div>
+    `;
+
+    const closeBtn = document.getElementById('close-video-btn');
+    const doneBtn = document.getElementById('done-video-btn');
+
+    const closeModal = () => modal.remove();
+    closeBtn.addEventListener('click', closeModal);
+    doneBtn.addEventListener('click', closeModal);
   },
 
   renderTimerModal(defaultSec = 60) {
