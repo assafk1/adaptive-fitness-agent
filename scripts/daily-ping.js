@@ -1,4 +1,4 @@
-// GitHub Actions Daily WebPush Execution Script with Verified P-256 VAPID Keypair
+// GitHub Actions Daily WebPush Execution Script with iOS APNs Urgency Headers
 
 const webpush = require('web-push');
 
@@ -31,8 +31,17 @@ async function run() {
 
   try {
     const subscription = JSON.parse(tokenEnv);
-    console.log('📡 Dispatching WebPush payload via Apple APNs to endpoint:', subscription.endpoint);
-    const result = await webpush.sendNotification(subscription, payload);
+    console.log('📡 Dispatching High-Priority WebPush payload via Apple APNs to endpoint:', subscription.endpoint);
+    
+    // Pass explicit iOS APNs Urgency & TTL options so iOS displays the lockscreen banner
+    const options = {
+      TTL: 86400, // 24 hours
+      headers: {
+        'Urgency': 'high'
+      }
+    };
+
+    const result = await webpush.sendNotification(subscription, payload, options);
     console.log('🎉 Apple APNs Push Delivery Success! Response Status:', result.statusCode);
   } catch (err) {
     console.error('❌ Failed to deliver push notification via APNs:', err);
