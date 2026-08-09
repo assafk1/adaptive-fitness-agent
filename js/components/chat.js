@@ -1,6 +1,13 @@
-// Clean Bare-Bones Conversational Chat Component
+// Clean Bare-Bones Conversational Chat Component with Markdown Formatter
 
 export const ChatComponent = {
+  formatMarkdown(text = '') {
+    return text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/\n/g, '<br/>');
+  },
+
   render(containerEl, messages = [], quickChips = [], onSendMessage, onChipClick) {
     const messagesHtml = messages.map(msg => {
       let planWidgetHtml = '';
@@ -52,7 +59,7 @@ export const ChatComponent = {
               <span class="msg-author">${msg.sender === 'user' ? 'You' : 'Adaptive Coach'}</span>
               <span class="msg-time">${msg.time || ''}</span>
             </div>
-            <div class="msg-text">${msg.text.replace(/\n/g, '<br/>')}</div>
+            <div class="msg-text">${this.formatMarkdown(msg.text)}</div>
             ${planWidgetHtml}
           </div>
         </div>

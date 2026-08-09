@@ -68,7 +68,7 @@ class AdaptiveCoachApp {
     const result = await PushService.registerSubscription();
     const granted = await NotificationManager.requestPermission();
 
-    const logText = `🔔 **Push Notification Test Result:**\n\n` + 
+    const logText = `🔔 Push Notification Test Result:\n\n` + 
       (result.logs ? result.logs.map(l => `• ${l}`).join('\n') : '• Permission granted, triggering push alert...');
     
     this.messages.push({
@@ -125,7 +125,7 @@ class AdaptiveCoachApp {
     const thinkingMsgIndex = this.messages.length;
     this.messages.push({
       sender: 'agent',
-      text: `🤖 *Thinking and customizing your plan with Gemini 2.0...*`,
+      text: `🤖 Thinking and customizing your plan with Gemini 3.6 Flash...`,
       time: timeStr
     });
     this.renderActiveTab();
@@ -177,7 +177,7 @@ class AdaptiveCoachApp {
     Storage.logCompletedWorkout(workoutLog);
     this.messages.push({
       sender: 'agent',
-      text: `🎉 Awesome job completing **${workoutLog.title}**! Session logged to your history.`,
+      text: `🎉 Awesome job completing ${workoutLog.title}! Session logged to your history.`,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     });
     this.activeTab = 'chat';
