@@ -1,4 +1,4 @@
-// Unconfined Google Gemini AI Coach Engine with Free Routine Generation
+// Unconfined Google Gemini AI Coach Engine with Free Routine Generation & Explicit Unilateral Rules
 
 import { Storage } from './storage.js';
 
@@ -80,6 +80,11 @@ Allowed Equipment ONLY: Floor / Yoga Mat, Chair / Bench, Jump Rope, Outdoor Runn
 FREE GENERATION INSTRUCTION:
 You have complete freedom to prescribe ANY exercise, stretch, calisthenics movement, jump rope footwork, or mobility drill without restriction!
 
+UNILATERAL EXERCISE SET & REP RULE (CRITICAL):
+For ANY unilateral exercise or stretch (movements performed one leg, arm, or side at a time, such as Bulgarian Split Squats, Reverse Lunges, Single-Leg RDLs, Side Planks, Cossack Squats, 90/90 Hip Swivels, Pigeon Pose, Single-Leg Calf Raises, Doorframe Iso Pulls):
+1. You MUST set "isUnilateral": true in the exercise object.
+2. In "defaultReps" or "tips", EXPLICITLY specify the reps or duration PER SIDE (e.g., "10 reps per side", "30s hold per leg", or "3 sets x 10 reps EACH SIDE"). Never leave unilateral volume ambiguous!
+
 DATED TRAINING DENSITY & FORM ASSESSMENT:
 - Has Completed History Logs: ${isNoHistoryFirstSession ? 'NO (First-time user)' : 'YES'}
 - Days Since Last Logged Workout: ${daysSinceLastWorkout !== null ? daysSinceLastWorkout + ' days ago' : 'N/A'}
@@ -124,11 +129,12 @@ You MUST respond ONLY with a valid JSON object matching this exact schema:
         "exercises": [
           {
             "name": "Exact Exercise Name",
+            "isUnilateral": true,
             "defaultSets": 3,
-            "defaultReps": 12,
+            "defaultReps": 10,
             "defaultDurationSec": 0,
             "restSec": 45,
-            "tips": "Form tip"
+            "tips": "10 reps per side. Keep torso upright."
           }
         ]
       }

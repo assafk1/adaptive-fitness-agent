@@ -1,9 +1,16 @@
-// Interactive Workout, Rest Timer, and Direct YouTube Search Query Integration Component
+// Interactive Workout, Rest Timer, Direct YouTube Search Query & Unilateral Badge Integration Component
 
 export const WorkoutComponent = {
   getSearchUrl(exerciseName = '') {
     const query = `${exerciseName} proper form`;
     return `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+  },
+
+  isUnilateral(ex) {
+    if (!ex) return false;
+    if (ex.isUnilateral) return true;
+    const combinedStr = `${ex.name || ''} ${ex.tips || ''} ${ex.defaultReps || ''}`.toLowerCase();
+    return combinedStr.includes('per side') || combinedStr.includes('each side') || combinedStr.includes('per leg') || combinedStr.includes('per arm') || combinedStr.includes('each leg');
   },
 
   renderWorkoutCard(containerEl, plan, onComplete) {
@@ -103,12 +110,14 @@ export const WorkoutComponent = {
     const totalSets = Math.min(Math.max(parseInt(ex.defaultSets || ex.sets || 3, 10), 1), 6);
     const setsArray = Array.from({ length: totalSets }, (_, i) => i + 1);
     const searchUrl = this.getSearchUrl(ex.name);
+    const unilateralBadgeHtml = this.isUnilateral(ex) ? `<span class="badge" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); font-size: 11px; padding: 2px 6px;">↔️ Per Side</span>` : '';
 
     return `
       <div class="exercise-item-row" style="padding: 10px 0; border-bottom: 1px solid var(--border-glass);">
         <div class="exercise-info">
           <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
             <span class="exercise-name" style="font-size: 15px;">${ex.name}</span>
+            ${unilateralBadgeHtml}
             <a href="${searchUrl}" target="_blank" rel="noopener" class="btn btn-outline btn-sm" style="padding: 2px 8px; font-size: 11px; text-decoration: none;">🎥 Watch Video</a>
           </div>
           <span class="exercise-meta">${ex.defaultSets ? ex.defaultSets + ' Sets x ' : ''}${ex.defaultReps ? ex.defaultReps + ' Reps' : (ex.defaultDurationSec ? Math.round(ex.defaultDurationSec / 60) + ' min hold' : '')}</span>
@@ -123,11 +132,14 @@ export const WorkoutComponent = {
 
   renderStretchRow(st) {
     const searchUrl = this.getSearchUrl(st.name);
+    const unilateralBadgeHtml = this.isUnilateral(st) ? `<span class="badge" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); font-size: 11px; padding: 2px 6px;">↔️ Per Side</span>` : '';
+
     return `
       <div class="exercise-item-row" style="padding: 10px 0; border-bottom: 1px solid var(--border-glass);">
         <div class="exercise-info">
           <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
             <span class="exercise-name" style="font-size: 15px;">🧘 ${st.name}</span>
+            ${unilateralBadgeHtml}
             <a href="${searchUrl}" target="_blank" rel="noopener" class="btn btn-outline btn-sm" style="padding: 2px 8px; font-size: 11px; text-decoration: none;">🎥 Watch Video</a>
           </div>
           <span class="exercise-meta">${st.durationSec}s ${st.perSide ? 'per side' : 'hold'}</span>
@@ -142,11 +154,14 @@ export const WorkoutComponent = {
 
   renderRoundRow(rd) {
     const searchUrl = this.getSearchUrl(rd.name);
+    const unilateralBadgeHtml = this.isUnilateral(rd) ? `<span class="badge" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); font-size: 11px; padding: 2px 6px;">↔️ Per Side</span>` : '';
+
     return `
       <div class="exercise-item-row" style="padding: 10px 0; border-bottom: 1px solid var(--border-glass);">
         <div class="exercise-info">
           <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
             <span class="exercise-name" style="font-size: 15px;">⚡ ${rd.name}</span>
+            ${unilateralBadgeHtml}
             <a href="${searchUrl}" target="_blank" rel="noopener" class="btn btn-outline btn-sm" style="padding: 2px 8px; font-size: 11px; text-decoration: none;">🎥 Watch Video</a>
           </div>
           <span class="exercise-meta">${rd.durationSec}s Work | ${rd.restSec || 0}s Rest</span>
