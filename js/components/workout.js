@@ -94,11 +94,54 @@ export const WorkoutComponent = {
     const completeBtn = document.getElementById('complete-workout-btn');
     if (completeBtn) {
       completeBtn.addEventListener('click', () => {
+        // Extract all exercises from the plan to persist full exercise content
+        const exercisesList = [];
+        if (plan.routines && plan.routines.length > 0) {
+          plan.routines.forEach(r => {
+            if (Array.isArray(r.exercises)) {
+              r.exercises.forEach(ex => {
+                exercisesList.push({
+                  name: ex.name,
+                  sets: ex.defaultSets || ex.sets || 3,
+                  reps: ex.defaultReps || ex.reps || null,
+                  durationSec: ex.defaultDurationSec || null,
+                  isUnilateral: !!ex.isUnilateral,
+                  tips: ex.tips || '',
+                  routineName: r.name || r.title || ''
+                });
+              });
+            }
+            if (Array.isArray(r.stretches)) {
+              r.stretches.forEach(st => {
+                exercisesList.push({
+                  name: st.name,
+                  durationSec: st.durationSec || 30,
+                  isUnilateral: !!st.perSide,
+                  routineName: r.name || r.title || ''
+                });
+              });
+            }
+          });
+        } else if (plan.exercises && plan.exercises.length > 0) {
+          plan.exercises.forEach(ex => {
+            exercisesList.push({
+              name: ex.name,
+              sets: ex.defaultSets || ex.sets || 3,
+              reps: ex.defaultReps || ex.reps || null,
+              durationSec: ex.defaultDurationSec || null,
+              isUnilateral: !!ex.isUnilateral,
+              tips: ex.tips || ''
+            });
+          });
+        }
+
         onComplete({
           title: title || 'Completed Session',
           type: type || 'Adaptive',
           durationMin: estimatedMinutes || 15,
-          readinessScore: readinessScore || 85
+          readinessScore: readinessScore || 85,
+          exercises: exercisesList,
+          routines: plan.routines || []
         });
         alert('🎉 Great work! Session logged to your progress history.');
       });

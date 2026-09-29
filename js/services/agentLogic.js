@@ -58,12 +58,64 @@ export const AgentLogic = {
       sessionsInLast30Days = allLogs.filter(l => new Date(l.timestamp || l.date) >= thirtyDaysAgo).length;
     }
 
-    const recentLogsFormatted = allLogs.slice(0, 7).map(l => ({
-      date: l.date,
-      title: l.title,
-      type: l.type,
-      durationMin: l.durationMin || l.estimatedMinutes || 15
-    }));
+    // Extract recent exercises from past logs for exercise diversity and progressive rotation
+    const recentExerciseHistory = [];
+    allLogs.slice(0, 7).forEach(log => {
+      let exList = [];
+      if (Array.isArray(log.exercises)) {
+        exList = log.exercises.map(e => (typeof e === 'string' ? e : e.name)).filter(Boolean);
+      } else if (Array.isArray(log.routines)) {
+        log.routines.forEach(r => {
+          if (Array.isArray(r.exercises)) {
+            r.exercises.forEach(e => { if (e && e.name) exList.push(e.name); });
+          }
+          if (Array.isArray(r.stretches)) {
+            r.stretches.forEach(s => { if (s && s.name) exList.push(s.name); });
+          }
+        });
+      }
+      if (exList.length > 0) {
+        recentExerciseHistory.push({
+          date: log.date || 'Recent',
+          title: log.title || 'Workout',
+          type: log.type || 'Workout',
+          exercises: exList
+        });
+      }
+    });
+
+    // If currentPlan has exercises, include them in the recent history audit
+    const currentPlanExercises = [];
+    if (currentPlan && Array.isArray(currentPlan.routines)) {
+      currentPlan.routines.forEach(r => {
+        if (Array.isArray(r.exercises)) {
+          r.exercises.forEach(e => { if (e && e.name) currentPlanExercises.push(e.name); });
+        }
+        if (Array.isArray(r.stretches)) {
+          r.stretches.forEach(s => { if (s && s.name) currentPlanExercises.push(s.name); });
+        }
+      });
+    }
+
+    const recentLogsFormatted = allLogs.slice(0, 7).map(l => {
+      let exNames = [];
+      if (Array.isArray(l.exercises)) {
+        exNames = l.exercises.map(e => (typeof e === 'string' ? e : e.name)).filter(Boolean);
+      }
+      return {
+        date: l.date,
+        title: l.title,
+        type: l.type,
+        durationMin: l.durationMin || l.estimatedMinutes || 15,
+        exercises: exNames
+      };
+    });
+
+    // Unique list of exercises recently done or prescribed
+    const recentUniqueExercises = [...new Set([
+      ...recentExerciseHistory.flatMap(h => h.exercises),
+      ...currentPlanExercises
+    ])];
 
     const systemPromptText = `You are Assaf's dedicated, empathetic, evidence-based AI Adaptive Home Fitness & Recovery Coach.
 
@@ -85,11 +137,31 @@ For ANY unilateral exercise or stretch (movements performed one leg, arm, or sid
 1. You MUST set "isUnilateral": true in the exercise object.
 2. In "defaultReps" or "tips", EXPLICITLY specify the reps or duration PER SIDE (e.g., "10 reps per side", "30s hold per leg", or "3 sets x 10 reps EACH SIDE"). Never leave unilateral volume ambiguous!
 
-DATED TRAINING DENSITY & FORM ASSESSMENT:
+EXERCISE DIVERSITY & PROGRESSIVE VARIATION RULES (CRITICAL):
+Assaf needs rich exercise variety across successive workouts to avoid boredom, prevent repetitive strain, and develop comprehensive multi-planar athleticism (tennis footwork, snowboard knee/quad durability, functional core strength).
+1. MANDATORY ROTATION — DO NOT REPEAT RECENT EXERCISES:
+   - Carefully inspect the "Recently Prescribed / Completed Exercises" list below.
+   - Do NOT prescribe the exact same exercises that Assaf completed or was prescribed in his most recent sessions.
+   - Always rotate exercise variations across muscle groups:
+     • Knee/Quad Dominant: If Bulgarian Split Squats were done recently, rotate to Reverse Lunges, Single-leg Chair Step-ups, Cossack Squats, Air Squats with tempo/pause, Wall Sits, or Curtsy Lunges.
+     • Hip/Hinge/Posterior: If Single-leg RDLs were done recently, rotate to Glute Bridges, Prone Back Extensions, Single-leg Calf Raises (toes-in/toes-out), or Good Mornings.
+     • Push/Pressing: If Standard Push-ups were done, rotate to Diamond Push-ups, Pike Push-ups (shoulder/overhead stability), Decline Push-ups (feet on chair), Archer Push-ups, Incline Push-ups, or Isometric Doorframe Pulls/Presses.
+     • Jump Rope: If Basic Bounce was done, rotate to Boxer Skip, Side Straddles, Front-to-Back Skier Hops, High Knees, Heel-Toe Taps, or Tabata Speed Intervals.
+     • Core & Trunk Stability: Rotate between Elbow Plank, Side Planks, Deadbugs, Hollow Body Holds, Bird Dogs, Mountain Climbers, and Copenhagen Planks (leveraged on a chair).
+     • Mobility & Prehab: Rotate targeted joints (e.g., 90/90 Hip Swivels, Pigeon Pose, Couch Stretch, Tibialis Wall Raises, Calf Deficit Stretches, Thoracic Open Books, World's Greatest Stretch).
+2. MULTI-PLANAR ATHLETICISM (TENNIS & SNOWBOARD SPECIFIC):
+   - Rotate planes of movement: Sagittal (forward/back), Frontal (lateral lunges, side bounds), and Transverse (rotational core and thoracic mobility).
+3. INTRODUCE FRESH OR NOVEL DRILLS:
+   - In EVERY new plan, include at least 1-2 movement variations that have NOT appeared in recent sessions to keep workouts stimulating and progressive.
+
+DATED TRAINING DENSITY & EXERCISE HISTORY AUDIT:
 - Has Completed History Logs: ${isNoHistoryFirstSession ? 'NO (First-time user)' : 'YES'}
 - Days Since Last Logged Workout: ${daysSinceLastWorkout !== null ? daysSinceLastWorkout + ' days ago' : 'N/A'}
 - Workouts Completed (Last 7 Days): ${sessionsInLast7Days}
-- Recent History: ${JSON.stringify(recentLogsFormatted)}
+- Recent Completed Sessions with Exercise Breakdown:
+${recentExerciseHistory.length > 0 ? JSON.stringify(recentExerciseHistory, null, 2) : 'No past exercises logged yet.'}
+- Recently Prescribed / Completed Exercises (DO NOT REPEAT THESE TODAY):
+${recentUniqueExercises.length > 0 ? recentUniqueExercises.join(', ') : 'None (first-time session)'}
 
 AUTOMATIC FORM & LOAD ADAPTATION RULES:
 1. INITIAL NO-HISTORY EDGE CASE:
