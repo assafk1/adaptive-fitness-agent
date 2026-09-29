@@ -1,11 +1,11 @@
 // Service Worker for Adaptive Coach PWA & iOS Native Push Notifications
 
-const CACHE_NAME = 'adaptive-coach-v36';
+const CACHE_NAME = 'adaptive-coach-v37';
 const ASSETS_TO_CACHE = [
   './',
-  './index.html?v=36',
-  './css/styles.css?v=36',
-  './js/app.js?v=36',
+  './index.html?v=37',
+  './css/styles.css?v=37',
+  './js/app.js?v=37',
   './manifest.json'
 ];
 
@@ -34,14 +34,36 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// Network-first fetch strategy to ensure fresh updates are always loaded
+// Network-first fetch strategy for same-origin GET assets only
 self.addEventListener('fetch', event => {
+  // CRITICAL: Only handle GET requests. Never intercept POST requests (e.g. Gemini AI API)
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
+  // CRITICAL: Only handle same-origin static assets. Never intercept third-party APIs (generativelanguage.googleapis.com, YouTube, fonts)
+  if (!event.request.url.startsWith(self.location.origin)) {
+    return;
+  }
+
   event.respondWith(
-    fetch(event.request).then(response => {
-      const responseClone = response.clone();
-      caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseClone));
-      return response;
-    }).catch(() => caches.match(event.request))
+    fetch(event.request)
+      .then(response => {
+        if (response && response.status === 200 && response.type === 'basic') {
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseClone));
+        }
+        return response;
+      })
+      .catch(async () => {
+        const cached = await caches.match(event.request);
+        if (cached) return cached;
+        if (event.request.mode === 'navigate') {
+          const fallback = await caches.match('./index.html?v=37') || await caches.match('./index.html');
+          if (fallback) return fallback;
+        }
+        return new Response('Network error and asset not cached', { status: 503, statusText: 'Offline' });
+      })
   );
 });
 

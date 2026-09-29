@@ -125,7 +125,7 @@ class AdaptiveCoachApp {
     const thinkingMsgIndex = this.messages.length;
     this.messages.push({
       sender: 'agent',
-      text: `🤖 Thinking and customizing your plan with Gemini 3.6 Flash...`,
+      text: `🤖 Thinking and customizing your plan with Gemini...`,
       time: timeStr
     });
     this.renderActiveTab();

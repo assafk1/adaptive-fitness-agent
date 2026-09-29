@@ -142,54 +142,69 @@ You MUST respond ONLY with a valid JSON object matching this exact schema:
   }
 }`;
 
-    const model = 'gemini-3.6-flash';
-    try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    const settings = Storage.getSettings();
+    const configuredModel = settings.selectedModel || 'gemini-2.0-flash';
+    const modelsToTry = [configuredModel];
+    if (configuredModel !== 'gemini-2.0-flash') modelsToTry.push('gemini-2.0-flash');
+    if (!modelsToTry.includes('gemini-2.5-flash')) modelsToTry.push('gemini-2.5-flash');
+    if (!modelsToTry.includes('gemini-1.5-flash')) modelsToTry.push('gemini-1.5-flash');
 
-      const payload = {
-        system_instruction: {
-          parts: [{ text: systemPromptText }]
-        },
-        contents: [
-          {
-            role: 'user',
-            parts: [{ text: messageText }]
-          }
-        ],
-        generationConfig: {
-          response_mime_type: 'application/json'
+    const payload = {
+      system_instruction: {
+        parts: [{ text: systemPromptText }]
+      },
+      contents: [
+        {
+          role: 'user',
+          parts: [{ text: messageText }]
         }
-      };
-
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error?.message || `API Error ${response.status}`);
+      ],
+      generationConfig: {
+        response_mime_type: 'application/json'
       }
+    };
 
-      const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-      const jsonText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
-      const parsed = JSON.parse(jsonText);
+    let lastError = null;
+    for (const model of modelsToTry) {
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
-      return {
-        type: 'TEXT',
-        text: parsed.speech || "How is your body feeling today, Assaf?",
-        quickChips: parsed.quickChips || ['Got 20 mins & feeling good', 'Rope & Calisthenics (15m)', 'Playing tennis today'],
-        updatedPlan: parsed.updatedPlan || null
-      };
-    } catch (err) {
-      console.warn(`Model ${model} call failed:`, err.message);
-      return {
-        type: 'TEXT',
-        text: `⚠️ **Gemini AI Error**: ${err.message}. Please check your API key by tapping 🔑 Key in the header.`,
-        quickChips: ['🔑 Check Gemini Key']
-      };
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error?.message || `API Error ${response.status}`);
+        }
+
+        const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        const jsonText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+        const parsed = JSON.parse(jsonText);
+
+        return {
+          type: 'TEXT',
+          text: parsed.speech || "How is your body feeling today, Assaf?",
+          quickChips: parsed.quickChips || ['Got 20 mins & feeling good', 'Rope & Calisthenics (15m)', 'Playing tennis today'],
+          updatedPlan: parsed.updatedPlan || null
+        };
+      } catch (err) {
+        console.warn(`Model ${model} call failed:`, err.message);
+        lastError = err;
+        if (err.message && (err.message.includes('not found') || err.message.includes('404') || err.message.includes('unsupported'))) {
+          continue;
+        }
+        break;
+      }
     }
+
+    return {
+      type: 'TEXT',
+      text: `⚠️ **Gemini AI Error**: ${lastError ? lastError.message : 'Unknown error'}. Please check your API key by tapping 🔑 Key in the header.`,
+      quickChips: ['🔑 Check Gemini Key']
+    };
   }
 };
