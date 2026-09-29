@@ -153,6 +153,13 @@ class AdaptiveCoachApp {
   handleChipClick(chipText) {
     if (chipText.includes('Test Push Alert') || chipText.includes('Push Ping')) {
       this.triggerTestPush();
+    } else if (chipText.includes('Retry Now')) {
+      const lastUserMsg = [...this.messages].reverse().find(m => m.sender === 'user');
+      if (lastUserMsg) {
+        this.handleUserMessage(lastUserMsg.text);
+      } else {
+        this.handleUserMessage("Let's align today's workout.");
+      }
     } else if (chipText.includes('🔑 Set Gemini Key') || chipText.includes('Check Gemini Key')) {
       this.openSettingsDrawer();
     } else if (chipText.includes('Show today\'s plan')) {

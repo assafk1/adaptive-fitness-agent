@@ -171,56 +171,112 @@ You MUST respond ONLY with a valid JSON object matching this exact schema:
       }
     };
 
+    const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+    const isRetryableError = (status, msg = '') => {
+      const lower = msg.toLowerCase();
+      return (
+        status === 429 ||
+        status === 503 ||
+        status === 500 ||
+        status === 502 ||
+        status === 504 ||
+        lower.includes('high demand') ||
+        lower.includes('spikes in demand') ||
+        lower.includes('try again later') ||
+        lower.includes('resource_exhausted') ||
+        lower.includes('rate limit') ||
+        lower.includes('overloaded')
+      );
+    };
+
+    const isModelAvailabilityError = (msg = '') => {
+      const lower = msg.toLowerCase();
+      return (
+        lower.includes('not found') ||
+        lower.includes('404') ||
+        lower.includes('no longer available') ||
+        lower.includes('unsupported') ||
+        lower.includes('deprecated') ||
+        lower.includes('retired')
+      );
+    };
+
     let lastError = null;
+    const MAX_RETRIES = 3;
+    const INITIAL_BACKOFF_MS = 1000;
+
+    modelLoop:
     for (const model of modelsToTry) {
-      try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error?.message || `API Error ${response.status}`);
+      for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+        if (attempt > 0) {
+          const backoff = (INITIAL_BACKOFF_MS * Math.pow(2, attempt - 1)) + Math.floor(Math.random() * 500);
+          console.warn(`[Gemini AI] Model ${model} busy/high-demand. Retrying in ${backoff}ms (attempt ${attempt}/${MAX_RETRIES})...`);
+          await wait(backoff);
         }
 
-        const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-        const jsonText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
-        const parsed = JSON.parse(jsonText);
+        try {
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
 
-        return {
-          type: 'TEXT',
-          text: parsed.speech || "How is your body feeling today, Assaf?",
-          quickChips: parsed.quickChips || ['Got 20 mins & feeling good', 'Rope & Calisthenics (15m)', 'Playing tennis today'],
-          updatedPlan: parsed.updatedPlan || null
-        };
-      } catch (err) {
-        console.warn(`Model ${model} call failed:`, err.message);
-        lastError = err;
-        const msg = (err.message || '').toLowerCase();
-        const isModelAvailabilityError = 
-          msg.includes('not found') || 
-          msg.includes('404') || 
-          msg.includes('no longer available') || 
-          msg.includes('unsupported') || 
-          msg.includes('deprecated') || 
-          msg.includes('retired');
+          const data = await response.json();
 
-        if (isModelAvailabilityError) {
-          continue;
+          if (!response.ok) {
+            const errorMsg = data.error?.message || `API Error ${response.status}`;
+            const err = new Error(errorMsg);
+            err.status = response.status;
+            throw err;
+          }
+
+          const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          const jsonText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+          const parsed = JSON.parse(jsonText);
+
+          return {
+            type: 'TEXT',
+            text: parsed.speech || "How is your body feeling today, Assaf?",
+            quickChips: parsed.quickChips || ['Got 20 mins & feeling good', 'Rope & Calisthenics (15m)', 'Playing tennis today'],
+            updatedPlan: parsed.updatedPlan || null
+          };
+        } catch (err) {
+          lastError = err;
+          const errMsg = err.message || '';
+
+          if (isModelAvailabilityError(errMsg)) {
+            console.warn(`[Gemini AI] Model ${model} unavailable: ${errMsg}. Trying next model...`);
+            continue modelLoop;
+          }
+
+          if (isRetryableError(err.status, errMsg)) {
+            console.warn(`[Gemini AI] Model ${model} high demand notice: ${errMsg}`);
+            if (attempt < MAX_RETRIES) {
+              continue;
+            } else {
+              console.warn(`[Gemini AI] Retries exhausted for ${model}. Cascading to next fallback model...`);
+              continue modelLoop;
+            }
+          }
+
+          console.error(`[Gemini AI] Non-retryable error on ${model}:`, errMsg);
+          break modelLoop;
         }
-        break;
       }
     }
 
+    const errMsg = lastError ? lastError.message : 'Unknown error';
+    const isDemandError = isRetryableError(lastError?.status, errMsg);
+
     return {
       type: 'TEXT',
-      text: `⚠️ **Gemini AI Error**: ${lastError ? lastError.message : 'Unknown error'}. Please check your API key by tapping 🔑 Key in the header.`,
-      quickChips: ['🔑 Check Gemini Key']
+      text: isDemandError
+        ? `⚠️ **Gemini High Demand**: Google's AI servers are temporarily experiencing high demand. Please tap **🔄 Retry Now** or wait a moment.`
+        : `⚠️ **Gemini AI Error**: ${errMsg}. Please check your API key by tapping 🔑 Key in the header.`,
+      quickChips: isDemandError ? ['🔄 Retry Now', 'Got 20 mins & feeling good', 'Playing tennis today'] : ['🔑 Check Gemini Key']
     };
   }
 };
