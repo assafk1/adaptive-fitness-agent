@@ -1,11 +1,11 @@
 // Service Worker for Adaptive Coach PWA & iOS Native Push Notifications
 
-const CACHE_NAME = 'adaptive-coach-v37';
+const CACHE_NAME = 'adaptive-coach-v38';
 const ASSETS_TO_CACHE = [
   './',
-  './index.html?v=37',
-  './css/styles.css?v=37',
-  './js/app.js?v=37',
+  './index.html?v=38',
+  './css/styles.css?v=38',
+  './js/app.js?v=38',
   './manifest.json'
 ];
 
@@ -59,7 +59,7 @@ self.addEventListener('fetch', event => {
         const cached = await caches.match(event.request);
         if (cached) return cached;
         if (event.request.mode === 'navigate') {
-          const fallback = await caches.match('./index.html?v=37') || await caches.match('./index.html');
+          const fallback = await caches.match('./index.html?v=38') || await caches.match('./index.html');
           if (fallback) return fallback;
         }
         return new Response('Network error and asset not cached', { status: 503, statusText: 'Offline' });

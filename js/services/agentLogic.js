@@ -143,11 +143,18 @@ You MUST respond ONLY with a valid JSON object matching this exact schema:
 }`;
 
     const settings = Storage.getSettings();
-    const configuredModel = settings.selectedModel || 'gemini-2.0-flash';
+    let configuredModel = settings.selectedModel || 'gemini-3.8-flash';
+    // Auto-migrate retired models
+    if (configuredModel === 'gemini-2.0-flash' || configuredModel === 'gemini-1.5-flash' || configuredModel === 'gemini-1.5-pro' || configuredModel === 'gemini-3.6-flash') {
+      configuredModel = 'gemini-3.8-flash';
+      Storage.saveSettings({ selectedModel: 'gemini-3.8-flash' });
+    }
+
     const modelsToTry = [configuredModel];
-    if (configuredModel !== 'gemini-2.0-flash') modelsToTry.push('gemini-2.0-flash');
+    if (!modelsToTry.includes('gemini-3.8-flash')) modelsToTry.push('gemini-3.8-flash');
+    if (!modelsToTry.includes('gemini-3.5-flash')) modelsToTry.push('gemini-3.5-flash');
+    if (!modelsToTry.includes('gemini-3.0-flash')) modelsToTry.push('gemini-3.0-flash');
     if (!modelsToTry.includes('gemini-2.5-flash')) modelsToTry.push('gemini-2.5-flash');
-    if (!modelsToTry.includes('gemini-1.5-flash')) modelsToTry.push('gemini-1.5-flash');
 
     const payload = {
       system_instruction: {
@@ -194,7 +201,16 @@ You MUST respond ONLY with a valid JSON object matching this exact schema:
       } catch (err) {
         console.warn(`Model ${model} call failed:`, err.message);
         lastError = err;
-        if (err.message && (err.message.includes('not found') || err.message.includes('404') || err.message.includes('unsupported'))) {
+        const msg = (err.message || '').toLowerCase();
+        const isModelAvailabilityError = 
+          msg.includes('not found') || 
+          msg.includes('404') || 
+          msg.includes('no longer available') || 
+          msg.includes('unsupported') || 
+          msg.includes('deprecated') || 
+          msg.includes('retired');
+
+        if (isModelAvailabilityError) {
           continue;
         }
         break;

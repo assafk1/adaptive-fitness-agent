@@ -91,7 +91,7 @@ export const ProfileComponent = {
 
       Storage.saveSettings({ 
         apiKey: keyVal, 
-        selectedModel: 'gemini-2.0-flash',
+        selectedModel: 'gemini-3.8-flash',
         morningPingTime: pingTimeVal 
       });
 

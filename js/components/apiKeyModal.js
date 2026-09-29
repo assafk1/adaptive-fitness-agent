@@ -7,7 +7,7 @@ export const ApiKeyModalComponent = {
   async renderModal(containerEl, onSave) {
     const settings = Storage.getSettings();
     const currentKey = settings.apiKey || '';
-    const currentModel = settings.selectedModel || 'gemini-2.0-flash';
+    const currentModel = settings.selectedModel || 'gemini-3.8-flash';
 
     const html = `
       <div class="modal-overlay" id="apikey-modal">
@@ -69,9 +69,9 @@ export const ApiKeyModalComponent = {
 
       if (models.length === 0) {
         modelSelect.innerHTML = `
-          <option value="gemini-2.0-flash" ${currentModel === 'gemini-2.0-flash' ? 'selected' : ''}>gemini-2.0-flash (Recommended)</option>
-          <option value="gemini-1.5-flash-latest" ${currentModel === 'gemini-1.5-flash-latest' ? 'selected' : ''}>gemini-1.5-flash-latest</option>
-          <option value="gemini-1.5-pro-latest" ${currentModel === 'gemini-1.5-pro-latest' ? 'selected' : ''}>gemini-1.5-pro-latest</option>
+          <option value="gemini-3.8-flash" ${currentModel === 'gemini-3.8-flash' ? 'selected' : ''}>gemini-3.8-flash (Recommended)</option>
+          <option value="gemini-3.5-flash" ${currentModel === 'gemini-3.5-flash' ? 'selected' : ''}>gemini-3.5-flash</option>
+          <option value="gemini-2.5-flash" ${currentModel === 'gemini-2.5-flash' ? 'selected' : ''}>gemini-2.5-flash</option>
         `;
       } else {
         modelSelect.innerHTML = models.map(m => `
@@ -93,7 +93,7 @@ export const ApiKeyModalComponent = {
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       const keyVal = keyInput.value.trim();
-      const selectedModelVal = modelSelect.value || 'gemini-2.0-flash';
+      const selectedModelVal = modelSelect.value || 'gemini-3.8-flash';
       
       Storage.saveSettings({ apiKey: keyVal, selectedModel: selectedModelVal });
       containerEl.innerHTML = '';
